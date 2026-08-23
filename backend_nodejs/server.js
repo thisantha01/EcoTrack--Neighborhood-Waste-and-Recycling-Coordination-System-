@@ -6,6 +6,12 @@ const cors = require('cors');
 const connectDB = require('./src/config/db');
 
 const authRoutes = require('./src/routes/authRoutes');
+const profileRoutes = require('./src/routes/profileRoutes');
+const communityPostRoutes = require('./src/routes/communityPostRoutes');
+const cleanupEventRoutes = require('./src/routes/cleanupEventRoutes');
+const announcementRoutes = require('./src/routes/announcementRoutes');
+const communityReportRoutes = require('./src/routes/communityReportRoutes');
+const engagementRoutes = require('./src/routes/engagementRoutes');
 
 const app = express();
 
@@ -35,19 +41,28 @@ app.get('/', (req, res) => {
   res.status(200).json({
     success: true,
     message:
-      'Waste Management API is running',
+      'EcoTrack API is running',
   });
 });
 
 
 // =====================================================
-// AUTH ROUTES
+// ROUTES
 // =====================================================
 
-app.use(
-  '/api/auth',
-  authRoutes
-);
+app.use('/api/auth', authRoutes);
+
+app.use('/api/profile', profileRoutes);
+
+app.use('/api/community/posts', communityPostRoutes);
+
+app.use('/api/community/events', cleanupEventRoutes);
+
+app.use('/api/community/announcements', announcementRoutes);
+
+app.use('/api/community/reports', communityReportRoutes);
+
+app.use('/api/community/engagement', engagementRoutes);
 
 
 // =====================================================

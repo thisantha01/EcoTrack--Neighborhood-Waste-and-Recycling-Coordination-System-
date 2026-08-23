@@ -39,6 +39,50 @@ const userSchema = new mongoose.Schema(
       ],
     },
 
+    // Profile
+    profilePicture: {
+      type: String,
+      default: null,
+    },
+
+    bio: {
+      type: String,
+      default: '',
+      maxlength: 300,
+    },
+
+    // Location (text for all, map coords for neighbour/restaurant_owner)
+    location: {
+      type: String,
+      default: '',
+    },
+
+    locationCoordinates: {
+      lat: { type: Number, default: null },
+      lng: { type: Number, default: null },
+    },
+
+    // Role-specific
+    restaurantName: {
+      type: String,
+      default: '',
+    },
+
+    restaurantAddress: {
+      type: String,
+      default: '',
+    },
+
+    licenseNumber: {
+      type: String,
+      default: '',
+    },
+
+    vehicleType: {
+      type: String,
+      default: '',
+    },
+
     isVerified: {
       type: Boolean,
       default: false,
