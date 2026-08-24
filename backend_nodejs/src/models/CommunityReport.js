@@ -1,5 +1,21 @@
 const mongoose = require('mongoose');
 
+const reportStatusHistorySchema = new mongoose.Schema({
+  status: {
+    type: String,
+    enum: ['open', 'in_progress', 'resolved'],
+    required: true
+  },
+  timestamp: {
+    type: Date,
+    default: Date.now
+  },
+  note: {
+    type: String,
+    default: ''
+  }
+}, { _id: false });
+
 const additionalInfoSchema = new mongoose.Schema(
   {
     user: {
@@ -67,6 +83,7 @@ const communityReportSchema = new mongoose.Schema(
       },
     ],
     additionalInfo: [additionalInfoSchema],
+    statusHistory: [reportStatusHistorySchema],
   },
   { timestamps: true }
 );

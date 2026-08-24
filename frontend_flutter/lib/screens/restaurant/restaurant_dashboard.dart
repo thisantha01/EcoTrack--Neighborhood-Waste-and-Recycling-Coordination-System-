@@ -4,6 +4,8 @@ import '../../providers/auth_provider.dart';
 import '../community/community_hub_screen.dart';
 import '../community/community_feed_screen.dart';
 import '../community/cleanup_events_screen.dart';
+import '../community/community_reports_screen.dart';
+import '../community/my_requests_screen.dart';
 import '../community/neighbourhood_screen.dart';
 import '../community/engagement_screen.dart';
 import '../profile/profile_screen.dart';
@@ -18,12 +20,14 @@ class RestaurantDashboard extends StatefulWidget {
 class _RestaurantDashboardState extends State<RestaurantDashboard> {
   int _selectedIndex = 0;
 
-  void _goToCommunity() => setState(() => _selectedIndex = 1);
+  void _goToCommunity() => setState(() => _selectedIndex = 3);
 
   @override
   Widget build(BuildContext context) {
     final List<Widget> pages = [
       _RestaurantHome(onGoToCommunity: _goToCommunity),
+      const CommunityReportsScreen(),
+      const MyRequestsScreen(),
       const CommunityHubScreen(),
       const ProfileScreen(),
     ];
@@ -41,6 +45,16 @@ class _RestaurantDashboardState extends State<RestaurantDashboard> {
             icon: Icon(Icons.home_outlined),
             selectedIcon: Icon(Icons.home, color: Color(0xFFE65100)),
             label: 'Home',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.report_outlined),
+            selectedIcon: Icon(Icons.report, color: Color(0xFFE65100)),
+            label: 'Reports',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.delete_outline),
+            selectedIcon: Icon(Icons.delete, color: Color(0xFFE65100)),
+            label: 'Requests',
           ),
           NavigationDestination(
             icon: Icon(Icons.people_outline),

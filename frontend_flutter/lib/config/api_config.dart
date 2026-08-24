@@ -7,7 +7,7 @@ class ApiConfig {
       return 'http://localhost:5000/api';
     }
     if (!kIsWeb && Platform.isAndroid) {
-      return 'http://192.168.8.164:5000/api';
+      return 'http://192.168.8.104:5000/api';
     }
     return 'http://localhost:5000/api';
   }
@@ -47,6 +47,14 @@ class ApiConfig {
   static String communityReportUpvote(String id) => '$baseUrl/community/reports/$id/upvote';
   static String communityReportInfo(String id) => '$baseUrl/community/reports/$id/info';
   static String communityReportStatus(String id) => '$baseUrl/community/reports/$id/status';
+
+  // Collection Requests
+  static String get collectionRequests => '$baseUrl/collection-requests';
+  static String get myCollectionRequests => '$baseUrl/collection-requests/my';
+  static String get allCollectionRequests => '$baseUrl/collection-requests/all';
+  static String collectionRequest(String id) => '$baseUrl/collection-requests/$id';
+  static String collectionRequestStatus(String id) => '$baseUrl/collection-requests/$id/status';
+  static String collectionRequestCancel(String id) => '$baseUrl/collection-requests/$id/cancel';
 
   // Engagement
   static String get myEngagement => '$baseUrl/community/engagement/me';
