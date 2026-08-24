@@ -7,7 +7,7 @@ class ApiConfig {
       return 'http://localhost:5000/api';
     }
     if (!kIsWeb && Platform.isAndroid) {
-      return 'http://10.0.2.2:5000/api';
+      return 'http://192.168.8.104:5000/api';
     }
     return 'http://localhost:5000/api';
   }
