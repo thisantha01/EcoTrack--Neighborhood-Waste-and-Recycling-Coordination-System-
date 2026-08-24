@@ -1,9 +1,14 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 
 import 'storage_service.dart';
 
 class ApiService {
+  // 10-second timeout for all requests
+  static const _timeout = Duration(seconds: 10);
+
   Future<Map<String, dynamic>> post(
     String url,
     Map<String, dynamic> body, {
@@ -12,13 +17,25 @@ class ApiService {
     try {
       final headers = await _buildHeaders(authenticated);
 
-      final response = await http.post(
-        Uri.parse(url),
-        headers: headers,
-        body: jsonEncode(body),
-      );
+      final response = await http
+          .post(
+            Uri.parse(url),
+            headers: headers,
+            body: jsonEncode(body),
+          )
+          .timeout(_timeout);
 
       return _handleResponse(response);
+    } on SocketException {
+      throw Exception(
+        'Cannot connect to server. Make sure the backend is running and '
+        'your phone is on the same Wi-Fi network as your PC.',
+      );
+    } on TimeoutException {
+      throw Exception(
+        'Connection timed out. Check that the server IP in api_config.dart '
+        'matches your PC\'s local IP address (run ipconfig to verify).',
+      );
     } catch (e) {
       if (e is Exception) rethrow;
       throw Exception('Unable to connect to server: $e');
@@ -32,12 +49,24 @@ class ApiService {
     try {
       final headers = await _buildHeaders(authenticated);
 
-      final response = await http.get(
-        Uri.parse(url),
-        headers: headers,
-      );
+      final response = await http
+          .get(
+            Uri.parse(url),
+            headers: headers,
+          )
+          .timeout(_timeout);
 
       return _handleResponse(response);
+    } on SocketException {
+      throw Exception(
+        'Cannot connect to server. Make sure the backend is running and '
+        'your phone is on the same Wi-Fi network as your PC.',
+      );
+    } on TimeoutException {
+      throw Exception(
+        'Connection timed out. Check that the server IP in api_config.dart '
+        'matches your PC\'s local IP address (run ipconfig to verify).',
+      );
     } catch (e) {
       if (e is Exception) rethrow;
       throw Exception('Unable to connect to server: $e');
@@ -52,13 +81,25 @@ class ApiService {
     try {
       final headers = await _buildHeaders(authenticated);
 
-      final response = await http.put(
-        Uri.parse(url),
-        headers: headers,
-        body: jsonEncode(body),
-      );
+      final response = await http
+          .put(
+            Uri.parse(url),
+            headers: headers,
+            body: jsonEncode(body),
+          )
+          .timeout(_timeout);
 
       return _handleResponse(response);
+    } on SocketException {
+      throw Exception(
+        'Cannot connect to server. Make sure the backend is running and '
+        'your phone is on the same Wi-Fi network as your PC.',
+      );
+    } on TimeoutException {
+      throw Exception(
+        'Connection timed out. Check that the server IP in api_config.dart '
+        'matches your PC\'s local IP address (run ipconfig to verify).',
+      );
     } catch (e) {
       if (e is Exception) rethrow;
       throw Exception('Unable to connect to server: $e');
@@ -72,12 +113,24 @@ class ApiService {
     try {
       final headers = await _buildHeaders(authenticated);
 
-      final response = await http.delete(
-        Uri.parse(url),
-        headers: headers,
-      );
+      final response = await http
+          .delete(
+            Uri.parse(url),
+            headers: headers,
+          )
+          .timeout(_timeout);
 
       return _handleResponse(response);
+    } on SocketException {
+      throw Exception(
+        'Cannot connect to server. Make sure the backend is running and '
+        'your phone is on the same Wi-Fi network as your PC.',
+      );
+    } on TimeoutException {
+      throw Exception(
+        'Connection timed out. Check that the server IP in api_config.dart '
+        'matches your PC\'s local IP address (run ipconfig to verify).',
+      );
     } catch (e) {
       if (e is Exception) rethrow;
       throw Exception('Unable to connect to server: $e');
