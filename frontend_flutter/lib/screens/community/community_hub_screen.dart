@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'community_feed_screen.dart';
 import 'cleanup_events_screen.dart';
 import 'neighbourhood_screen.dart';
-import 'community_reports_screen.dart';
 import 'engagement_screen.dart';
 
 class CommunityHubScreen extends StatefulWidget {
@@ -19,7 +18,6 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
     const CommunityFeedScreen(),
     const CleanupEventsScreen(),
     const NeighbourhoodScreen(),
-    const CommunityReportsScreen(),
     const EngagementScreen(),
   ];
 
@@ -61,11 +59,6 @@ class _CommunityHubScreenState extends State<CommunityHubScreen> {
               icon: Icon(Icons.groups_outlined),
               selectedIcon: Icon(Icons.groups, color: Color(0xFF2E7D32)),
               label: 'Neighbours',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.report_outlined),
-              selectedIcon: Icon(Icons.report, color: Color(0xFF2E7D32)),
-              label: 'Reports',
             ),
             NavigationDestination(
               icon: Icon(Icons.emoji_events_outlined),
