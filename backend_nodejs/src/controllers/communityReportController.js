@@ -96,6 +96,7 @@ const createReport = async (req, res) => {
       coordinates: coordinates || {},
       imageUrl: imageUrl || null,
       type: type || 'illegal_dumping',
+      statusHistory: [{ status: 'open', note: 'Report submitted' }],
     });
 
     await report.populate('reporter', 'name profilePicture role');
@@ -229,11 +230,7 @@ const updateReportStatus = async (req, res) => {
       });
     }
 
-    const report = await CommunityReport.findByIdAndUpdate(
-      req.params.id,
-      { status },
-      { new: true }
-    ).populate('reporter', 'name profilePicture');
+    const report = await CommunityReport.findById(req.params.id);
 
     if (!report) {
       return res.status(404).json({
@@ -241,6 +238,15 @@ const updateReportStatus = async (req, res) => {
         message: 'Report not found',
       });
     }
+
+    report.status = status;
+    report.statusHistory.push({
+      status,
+      note: req.body.note || `Status updated to ${status}`,
+    });
+
+    await report.save();
+    await report.populate('reporter', 'name profilePicture');
 
     return res.status(200).json({
       success: true,

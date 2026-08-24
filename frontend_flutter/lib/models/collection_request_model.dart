@@ -1,144 +1,95 @@
-import 'package:flutter/material.dart';
-
-class RequesterInfo {
-  final String id;
-  final String name;
-  final String? email;
-  final String? phone;
-  final String? location;
-
-  RequesterInfo({
-    required this.id,
-    required this.name,
-    this.email,
-    this.phone,
-    this.location,
-  });
-
-  factory RequesterInfo.fromJson(Map<String, dynamic> json) {
-    return RequesterInfo(
-      id: json['_id']?.toString() ?? json['id']?.toString() ?? '',
-      name: json['name'] ?? '',
-      email: json['email'],
-      phone: json['phone'],
-      location: json['location'],
-    );
-  }
-}
-
-class DriverInfo {
-  final String id;
-  final String name;
-  final String? phone;
-  final String? vehicleType;
-
-  DriverInfo({
-    required this.id,
-    required this.name,
-    this.phone,
-    this.vehicleType,
-  });
-
-  factory DriverInfo.fromJson(Map<String, dynamic> json) {
-    return DriverInfo(
-      id: json['_id']?.toString() ?? json['id']?.toString() ?? '',
-      name: json['name'] ?? '',
-      phone: json['phone'],
-      vehicleType: json['vehicleType'],
-    );
-  }
-}
-
-class StatusHistoryEntry {
+class StatusEntry {
   final String status;
-  final DateTime? timestamp;
+  final DateTime timestamp;
   final String note;
 
-  StatusHistoryEntry({
+  StatusEntry({
     required this.status,
-    this.timestamp,
+    required this.timestamp,
     this.note = '',
   });
 
-  factory StatusHistoryEntry.fromJson(Map<String, dynamic> json) {
-    return StatusHistoryEntry(
+  factory StatusEntry.fromJson(Map<String, dynamic> json) {
+    return StatusEntry(
       status: json['status'] ?? '',
-      timestamp: json['timestamp'] != null
-          ? DateTime.tryParse(json['timestamp'])
-          : null,
+      timestamp: DateTime.parse(json['timestamp']),
       note: json['note'] ?? '',
     );
   }
 }
 
-class CollectionRequestModel {
+class CollectionRequest {
   final String id;
-  final RequesterInfo? requester;
+  final String requesterId;
+  final String requesterName;
+  final String? requesterPicture;
   final String wasteType;
   final double estimatedQuantity;
   final String description;
   final String? imageUrl;
   final String location;
+  final double? lat;
+  final double? lng;
   final DateTime? preferredDate;
-  final String preferredTime;
+  final String? preferredTime;
   final String status;
-  final List<StatusHistoryEntry> statusHistory;
-  final DriverInfo? assignedDriver;
-  final DateTime? createdAt;
-  final DateTime? updatedAt;
+  final List<StatusEntry> statusHistory;
+  final String? assignedDriverId;
+  final String? assignedDriverName;
+  final DateTime createdAt;
 
-  CollectionRequestModel({
+  CollectionRequest({
     required this.id,
-    this.requester,
+    required this.requesterId,
+    required this.requesterName,
+    this.requesterPicture,
     required this.wasteType,
-    this.estimatedQuantity = 0,
+    required this.estimatedQuantity,
     this.description = '',
     this.imageUrl,
     required this.location,
+    this.lat,
+    this.lng,
     this.preferredDate,
-    this.preferredTime = '',
+    this.preferredTime,
     required this.status,
     this.statusHistory = const [],
-    this.assignedDriver,
-    this.createdAt,
-    this.updatedAt,
+    this.assignedDriverId,
+    this.assignedDriverName,
+    required this.createdAt,
   });
 
-  factory CollectionRequestModel.fromJson(Map<String, dynamic> json) {
-    return CollectionRequestModel(
-      id: json['_id']?.toString() ?? json['id']?.toString() ?? '',
-      requester: json['requester'] is Map<String, dynamic>
-          ? RequesterInfo.fromJson(json['requester'])
-          : null,
+  factory CollectionRequest.fromJson(Map<String, dynamic> json) {
+    final requester = json['requester'];
+    final assignedDriver = json['assignedDriver'];
+
+    return CollectionRequest(
+      id: json['_id'] ?? json['id'] ?? '',
+      requesterId: requester is Map ? requester['_id'] ?? '' : '',
+      requesterName: requester is Map ? requester['name'] ?? '' : '',
+      requesterPicture: requester is Map ? requester['profilePicture'] : null,
       wasteType: json['wasteType'] ?? '',
-      estimatedQuantity: (json['estimatedQuantity'] as num?)?.toDouble() ?? 0,
+      estimatedQuantity: (json['estimatedQuantity'] ?? 0).toDouble(),
       description: json['description'] ?? '',
       imageUrl: json['imageUrl'],
       location: json['location'] ?? '',
+      lat: json['coordinates']?['lat']?.toDouble(),
+      lng: json['coordinates']?['lng']?.toDouble(),
       preferredDate: json['preferredDate'] != null
           ? DateTime.tryParse(json['preferredDate'])
           : null,
-      preferredTime: json['preferredTime'] ?? '',
+      preferredTime: json['preferredTime'],
       status: json['status'] ?? 'requested',
       statusHistory: (json['statusHistory'] as List<dynamic>?)
-              ?.map((h) => StatusHistoryEntry.fromJson(
-                    Map<String, dynamic>.from(h),
-                  ))
+              ?.map((e) => StatusEntry.fromJson(e))
               .toList() ??
           [],
-      assignedDriver: json['assignedDriver'] is Map<String, dynamic>
-          ? DriverInfo.fromJson(json['assignedDriver'])
-          : null,
-      createdAt: json['createdAt'] != null
-          ? DateTime.tryParse(json['createdAt'])
-          : null,
-      updatedAt: json['updatedAt'] != null
-          ? DateTime.tryParse(json['updatedAt'])
-          : null,
+      assignedDriverId: assignedDriver is Map ? assignedDriver['_id'] : null,
+      assignedDriverName: assignedDriver is Map ? assignedDriver['name'] : null,
+      createdAt: DateTime.parse(json['createdAt']),
     );
   }
 
-  /// Human-readable waste type
   String get wasteTypeLabel {
     switch (wasteType) {
       case 'organic':
@@ -160,48 +111,20 @@ class CollectionRequestModel {
     }
   }
 
-  /// Human-readable status label (capitalize first letter)
   String get statusLabel {
-    return status[0].toUpperCase() + status.substring(1);
-  }
-
-  /// Color for status badge
-  static Color getStatusColor(String status) {
     switch (status) {
       case 'requested':
-        return const Color(0xFFFF9800); // Orange
+        return 'Requested';
       case 'accepted':
-        return const Color(0xFF2196F3); // Blue
+        return 'Accepted';
       case 'scheduled':
-        return const Color(0xFF9C27B0); // Purple
+        return 'Scheduled';
       case 'collected':
-        return const Color(0xFF4CAF50); // Green
+        return 'Collected';
       case 'cancelled':
-        return const Color(0xFFF44336); // Red
+        return 'Cancelled';
       default:
-        return Colors.grey;
-    }
-  }
-
-  /// Icon for waste type
-  static IconData getWasteTypeIcon(String type) {
-    switch (type) {
-      case 'organic':
-        return Icons.eco;
-      case 'plastic':
-        return Icons.local_drink;
-      case 'paper':
-        return Icons.description;
-      case 'glass':
-        return Icons.wine_bar;
-      case 'metal':
-        return Icons.build;
-      case 'electronic':
-        return Icons.devices;
-      case 'hazardous':
-        return Icons.warning_amber;
-      default:
-        return Icons.delete_outline;
+        return status;
     }
   }
 }

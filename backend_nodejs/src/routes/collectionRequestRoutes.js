@@ -1,27 +1,24 @@
 const express = require('express');
+const router = express.Router();
 const { protect } = require('../middleware/authMiddleware');
 const {
-  createCollectionRequest,
-  getMyCollectionRequests,
-  getMyCollectionRequest,
-  cancelCollectionRequest,
+  createRequest,
+  getMyRequests,
+  getAllRequests,
+  getRequest,
+  updateStatus,
+  cancelRequest,
 } = require('../controllers/collectionRequestController');
-
-const router = express.Router();
 
 // All routes require authentication
 router.use(protect);
 
-// Create a new collection request
-router.post('/', createCollectionRequest);
-
-// Get my collection requests
-router.get('/', getMyCollectionRequests);
-
-// Get my single request
-router.get('/:id', getMyCollectionRequest);
-
-// Cancel my request
-router.put('/:id/cancel', cancelCollectionRequest);
+// CRUD
+router.post('/', createRequest);
+router.get('/my', getMyRequests);
+router.get('/all', getAllRequests);
+router.get('/:id', getRequest);
+router.put('/:id/status', updateStatus);
+router.put('/:id/cancel', cancelRequest);
 
 module.exports = router;

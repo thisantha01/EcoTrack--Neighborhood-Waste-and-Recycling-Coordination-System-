@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import 'providers/auth_provider.dart';
 import 'providers/manager_provider.dart';
+import 'providers/driver_provider.dart';
 
 // Splash Screen
 import 'screens/splash/splash_screen.dart';
@@ -43,6 +44,12 @@ class WasteManagementApp extends StatelessWidget {
       child: ChangeNotifierProvider(
         create: (_) => ManagerProvider(),
         child: MaterialApp(
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => DriverProvider()),
+      ],
+      child: MaterialApp(
         debugShowCheckedModeBanner: false,
 
         title: 'EcoTrack',

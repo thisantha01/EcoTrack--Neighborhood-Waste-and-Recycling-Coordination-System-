@@ -5,6 +5,7 @@ import '../community/community_hub_screen.dart';
 import '../community/community_feed_screen.dart';
 import '../community/cleanup_events_screen.dart';
 import '../community/community_reports_screen.dart';
+import '../community/my_requests_screen.dart';
 import '../community/engagement_screen.dart';
 import '../profile/profile_screen.dart';
 
@@ -20,12 +21,14 @@ class _NeighbourDashboardState extends State<NeighbourDashboard> {
 
   // We keep the hub index so the nav bar stays correct,
   // but expose a callback so Home can switch to Community tab.
-  void _goToCommunity() => setState(() => _selectedIndex = 1);
+  void _goToCommunity() => setState(() => _selectedIndex = 3);
 
   @override
   Widget build(BuildContext context) {
     final List<Widget> pages = [
       _NeighbourHome(onGoToCommunity: _goToCommunity),
+      const CommunityReportsScreen(),
+      const MyRequestsScreen(),
       const CommunityHubScreen(),
       const ProfileScreen(),
     ];
@@ -36,13 +39,22 @@ class _NeighbourDashboardState extends State<NeighbourDashboard> {
         selectedIndex: _selectedIndex,
         onDestinationSelected: (i) => setState(() => _selectedIndex = i),
         backgroundColor: Colors.white,
-        surfaceTintColor: Colors.white,
-        indicatorColor: const Color(0xFFE8F5E9),
-        destinations: const [
+        surfaceTintColor: Colors.white,          indicatorColor: const Color(0xFFE8F5E9),
+          destinations: const [
           NavigationDestination(
             icon: Icon(Icons.home_outlined),
             selectedIcon: Icon(Icons.home, color: Color(0xFF2E7D32)),
             label: 'Home',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.report_outlined),
+            selectedIcon: Icon(Icons.report, color: Color(0xFF2E7D32)),
+            label: 'Reports',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.delete_outline),
+            selectedIcon: Icon(Icons.delete, color: Color(0xFF2E7D32)),
+            label: 'Requests',
           ),
           NavigationDestination(
             icon: Icon(Icons.people_outline),

@@ -1,11 +1,12 @@
 const CollectionRequest = require('../models/CollectionRequest');
+const UserPoints = require('../models/UserPoints');
 
 
 // =====================================================
 // CREATE COLLECTION REQUEST
 // =====================================================
 
-const createCollectionRequest = async (req, res) => {
+const createRequest = async (req, res) => {
   try {
     const {
       wasteType,
@@ -18,25 +19,10 @@ const createCollectionRequest = async (req, res) => {
       preferredTime,
     } = req.body;
 
-    // Validate required fields
-    if (!wasteType) {
+    if (!wasteType || !estimatedQuantity || !location) {
       return res.status(400).json({
         success: false,
-        message: 'Waste type is required',
-      });
-    }
-
-    if (estimatedQuantity === undefined || estimatedQuantity === null) {
-      return res.status(400).json({
-        success: false,
-        message: 'Estimated quantity is required',
-      });
-    }
-
-    if (!location) {
-      return res.status(400).json({
-        success: false,
-        message: 'Pickup location is required',
+        message: 'Waste type, estimated quantity and location are required',
       });
     }
 
@@ -46,36 +32,35 @@ const createCollectionRequest = async (req, res) => {
       estimatedQuantity,
       description: description || '',
       imageUrl: imageUrl || null,
-      location,
+      location: location.trim(),
       coordinates: coordinates || {},
-      preferredDate: preferredDate ? new Date(preferredDate) : null,
-      preferredTime: preferredTime || '',
+      preferredDate: preferredDate || null,
+      preferredTime: preferredTime || null,
       status: 'requested',
-      statusHistory: [
-        {
-          status: 'requested',
-          timestamp: new Date(),
-          note: 'Collection request submitted',
-        },
-      ],
+      statusHistory: [{ status: 'requested', note: 'Request created' }],
     });
+
+    await request.populate('requester', 'name profilePicture role');
+
+    // Award points for creating a request
+    try {
+      await UserPoints.findOneAndUpdate(
+        { user: req.user._id },
+        { $inc: { points: 5 } },
+        { upsert: true }
+      );
+    } catch (err) {
+      console.error('Award points error:', err);
+    }
 
     return res.status(201).json({
       success: true,
       message: 'Collection request created successfully',
       request,
     });
+
   } catch (error) {
-    console.error('Create collection request error:', error);
-
-    if (error.name === 'ValidationError') {
-      const messages = Object.values(error.errors).map((e) => e.message);
-      return res.status(400).json({
-        success: false,
-        message: messages.join(', '),
-      });
-    }
-
+    console.error('Create request error:', error);
     return res.status(500).json({
       success: false,
       message: 'Unable to create collection request',
@@ -85,66 +70,80 @@ const createCollectionRequest = async (req, res) => {
 
 
 // =====================================================
-// GET MY COLLECTION REQUESTS
+// GET MY REQUESTS
 // =====================================================
 
-const getMyCollectionRequests = async (req, res) => {
+const getMyRequests = async (req, res) => {
   try {
-    const { status, page = 1, limit = 20 } = req.query;
-
+    const { status } = req.query;
     const filter = { requester: req.user._id };
-
-    if (status) {
-      filter.status = status;
-    }
-
-    const pageNum = parseInt(page) || 1;
-    const limitNum = parseInt(limit) || 20;
-    const skip = (pageNum - 1) * limitNum;
+    if (status) filter.status = status;
 
     const requests = await CollectionRequest.find(filter)
       .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limitNum)
-      .populate('assignedDriver', 'name phone vehicleType');
-
-    const total = await CollectionRequest.countDocuments(filter);
+      .populate('requester', 'name profilePicture role')
+      .populate('assignedDriver', 'name profilePicture');
 
     return res.status(200).json({
       success: true,
       requests,
-      pagination: {
-        page: pageNum,
-        limit: limitNum,
-        total,
-        pages: Math.ceil(total / limitNum),
-      },
     });
+
   } catch (error) {
-    console.error('Get my collection requests error:', error);
+    console.error('Get my requests error:', error);
     return res.status(500).json({
       success: false,
-      message: 'Unable to fetch collection requests',
+      message: 'Unable to fetch requests',
     });
   }
 };
 
 
 // =====================================================
-// GET MY SINGLE REQUEST
+// GET ALL REQUESTS (for drivers / admin)
 // =====================================================
 
-const getMyCollectionRequest = async (req, res) => {
+const getAllRequests = async (req, res) => {
   try {
-    const request = await CollectionRequest.findOne({
-      _id: req.params.id,
-      requester: req.user._id,
-    }).populate('assignedDriver', 'name phone vehicleType');
+    const { status, wasteType } = req.query;
+    const filter = {};
+    if (status) filter.status = status;
+    if (wasteType) filter.wasteType = wasteType;
+
+    const requests = await CollectionRequest.find(filter)
+      .sort({ createdAt: -1 })
+      .populate('requester', 'name profilePicture role')
+      .populate('assignedDriver', 'name profilePicture');
+
+    return res.status(200).json({
+      success: true,
+      requests,
+    });
+
+  } catch (error) {
+    console.error('Get all requests error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Unable to fetch requests',
+    });
+  }
+};
+
+
+// =====================================================
+// GET SINGLE REQUEST
+// =====================================================
+
+const getRequest = async (req, res) => {
+  try {
+    const request = await CollectionRequest.findById(req.params.id)
+      .populate('requester', 'name profilePicture role phone')
+      .populate('assignedDriver', 'name profilePicture');
 
     if (!request) {
       return res.status(404).json({
         success: false,
-        message: 'Collection request not found',
+        message: 'Request not found',
       });
     }
 
@@ -152,63 +151,135 @@ const getMyCollectionRequest = async (req, res) => {
       success: true,
       request,
     });
+
   } catch (error) {
-    console.error('Get my collection request error:', error);
     return res.status(500).json({
       success: false,
-      message: 'Unable to fetch collection request',
+      message: 'Unable to fetch request',
     });
   }
 };
 
 
 // =====================================================
-// CANCEL MY REQUEST
+// UPDATE STATUS (drivers / recycling_manager)
 // =====================================================
 
-const cancelCollectionRequest = async (req, res) => {
+const updateStatus = async (req, res) => {
   try {
-    const request = await CollectionRequest.findOne({
-      _id: req.params.id,
-      requester: req.user._id,
-    });
+    const { status, note, assignedDriver } = req.body;
+
+    const validStatuses = ['requested', 'accepted', 'scheduled', 'collected', 'cancelled'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid status',
+      });
+    }
+
+    const request = await CollectionRequest.findById(req.params.id);
 
     if (!request) {
       return res.status(404).json({
         success: false,
-        message: 'Collection request not found',
+        message: 'Request not found',
       });
     }
 
-    if (request.status === 'collected') {
+    // Validate status transitions
+    const validTransitions = {
+      requested: ['accepted', 'cancelled'],
+      accepted: ['scheduled', 'cancelled'],
+      scheduled: ['collected', 'cancelled'],
+      collected: [],
+      cancelled: [],
+    };
+
+    if (!validTransitions[request.status].includes(status)) {
       return res.status(400).json({
         success: false,
-        message: 'Cannot cancel a collected request',
+        message: `Cannot transition from "${request.status}" to "${status}"`,
       });
     }
 
-    if (request.status === 'cancelled') {
+    request.status = status;
+    request.statusHistory.push({
+      status,
+      note: note || `Status updated to ${status}`,
+    });
+
+    if (assignedDriver) {
+      request.assignedDriver = assignedDriver;
+    }
+
+    await request.save();
+    await request.populate('requester', 'name profilePicture role');
+    await request.populate('assignedDriver', 'name profilePicture');
+
+    return res.status(200).json({
+      success: true,
+      message: `Request status updated to "${status}"`,
+      request,
+    });
+
+  } catch (error) {
+    console.error('Update status error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Unable to update request status',
+    });
+  }
+};
+
+
+// =====================================================
+// CANCEL REQUEST (requester only, if still "requested")
+// =====================================================
+
+const cancelRequest = async (req, res) => {
+  try {
+    const request = await CollectionRequest.findById(req.params.id);
+
+    if (!request) {
+      return res.status(404).json({
+        success: false,
+        message: 'Request not found',
+      });
+    }
+
+    // Only the requester can cancel
+    if (request.requester.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorised to cancel this request',
+      });
+    }
+
+    // Can only cancel if not yet accepted
+    if (!['requested', 'accepted'].includes(request.status)) {
       return res.status(400).json({
         success: false,
-        message: 'Request is already cancelled',
+        message: 'Cannot cancel a request that is already scheduled or collected',
       });
     }
 
     request.status = 'cancelled';
     request.statusHistory.push({
       status: 'cancelled',
-      timestamp: new Date(),
       note: 'Cancelled by requester',
     });
+
     await request.save();
+    await request.populate('requester', 'name profilePicture role');
 
     return res.status(200).json({
       success: true,
       message: 'Request cancelled',
       request,
     });
+
   } catch (error) {
-    console.error('Cancel collection request error:', error);
+    console.error('Cancel request error:', error);
     return res.status(500).json({
       success: false,
       message: 'Unable to cancel request',
@@ -222,8 +293,10 @@ const cancelCollectionRequest = async (req, res) => {
 // =====================================================
 
 module.exports = {
-  createCollectionRequest,
-  getMyCollectionRequests,
-  getMyCollectionRequest,
-  cancelCollectionRequest,
+  createRequest,
+  getMyRequests,
+  getAllRequests,
+  getRequest,
+  updateStatus,
+  cancelRequest,
 };
