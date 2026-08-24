@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'providers/auth_provider.dart';
+import 'providers/manager_provider.dart';
 import 'providers/driver_provider.dart';
 
 // Splash Screen
@@ -37,6 +38,12 @@ class WasteManagementApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => AuthProvider(),
+
+      child: ChangeNotifierProvider(
+        create: (_) => ManagerProvider(),
+        child: MaterialApp(
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
@@ -123,6 +130,7 @@ class WasteManagementApp extends StatelessWidget {
           '/profile': (context) => const ProfileScreen(),
           '/community': (context) => const CommunityHubScreen(),
         },
+      ),
       ),
     );
   }

@@ -19,6 +19,7 @@ const cleanupEventRoutes = require('./src/routes/cleanupEventRoutes');
 const announcementRoutes = require('./src/routes/announcementRoutes');
 const communityReportRoutes = require('./src/routes/communityReportRoutes');
 const engagementRoutes = require('./src/routes/engagementRoutes');
+const managerRoutes = require('./src/routes/managerRoutes');
 const collectionRequestRoutes = require('./src/routes/collectionRequestRoutes');
 
 
@@ -76,6 +77,7 @@ app.use('/api/community/reports', communityReportRoutes);
 app.use('/api/community/engagement', engagementRoutes);
 
 app.use('/api/collection-requests', collectionRequestRoutes);
+app.use('/api/manager', managerRoutes);
 
 
 // =====================================================
