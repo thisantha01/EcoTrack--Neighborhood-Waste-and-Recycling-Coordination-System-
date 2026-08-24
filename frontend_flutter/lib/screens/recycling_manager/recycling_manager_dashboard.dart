@@ -7,6 +7,7 @@ import '../community/cleanup_events_screen.dart';
 import '../community/community_reports_screen.dart';
 import '../community/engagement_screen.dart';
 import '../profile/profile_screen.dart';
+import 'assign_route_screen.dart'; // AssignRouteScreen එක import කරන්න
 
 class RecyclingManagerDashboard extends StatefulWidget {
   const RecyclingManagerDashboard({super.key});
@@ -20,12 +21,14 @@ class _RecyclingManagerDashboardState
     extends State<RecyclingManagerDashboard> {
   int _selectedIndex = 0;
 
-  void _goToCommunity() => setState(() => _selectedIndex = 1);
+  void _goToCommunity() => setState(() => _selectedIndex = 2);
 
   @override
   Widget build(BuildContext context) {
+    // Pages ලැයිස්තුවට AssignRouteScreen එක 1nd index එකට එකතු කරන ලදී
     final List<Widget> pages = [
       _RecyclingManagerHome(onGoToCommunity: _goToCommunity),
+      const AssignRouteScreen(), // Assign Routes Tab එක
       const CommunityHubScreen(),
       const ProfileScreen(),
     ];
@@ -44,6 +47,11 @@ class _RecyclingManagerDashboardState
             selectedIcon:
                 Icon(Icons.dashboard, color: Color(0xFF6A1B9A)),
             label: 'Dashboard',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.alt_route_outlined),
+            selectedIcon: Icon(Icons.alt_route, color: Color(0xFF6A1B9A)),
+            label: 'Assign Routes',
           ),
           NavigationDestination(
             icon: Icon(Icons.people_outline),
