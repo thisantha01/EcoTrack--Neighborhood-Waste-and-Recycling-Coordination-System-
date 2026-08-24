@@ -66,6 +66,31 @@ class ApiService {
     }
   }
 
+  Future<Map<String, dynamic>> patch(
+    String url,
+    Map<String, dynamic> body, {
+    bool authenticated = false,
+  }) async {
+    try {
+      final headers = {'Content-Type': 'application/json'};
+      if (authenticated) {
+        final token = await StorageService.getToken();
+        if (token != null) {
+          headers['Authorization'] = 'Bearer $token';
+        }
+      }
+
+      final response = await http.patch(
+        Uri.parse(url),
+        headers: headers,
+        body: jsonEncode(body),
+      );
+      return _handleResponse(response);
+    } catch (e) {
+      throw Exception('Unable to connect to server: $e');
+    }
+  }
+
   Map<String, dynamic> _handleResponse(
     http.Response response,
   ) {
