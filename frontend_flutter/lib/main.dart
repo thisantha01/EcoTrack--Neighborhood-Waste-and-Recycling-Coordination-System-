@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'providers/auth_provider.dart';
+import 'providers/manager_provider.dart';
 
 // Splash Screen
 import 'screens/splash/splash_screen.dart';
@@ -39,7 +40,9 @@ class WasteManagementApp extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (_) => AuthProvider(),
 
-      child: MaterialApp(
+      child: ChangeNotifierProvider(
+        create: (_) => ManagerProvider(),
+        child: MaterialApp(
         debugShowCheckedModeBanner: false,
 
         title: 'EcoTrack',
@@ -120,6 +123,7 @@ class WasteManagementApp extends StatelessWidget {
           '/profile': (context) => const ProfileScreen(),
           '/community': (context) => const CommunityHubScreen(),
         },
+      ),
       ),
     );
   }

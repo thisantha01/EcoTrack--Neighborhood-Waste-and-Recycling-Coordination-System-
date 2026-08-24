@@ -4,6 +4,7 @@ import '../../providers/auth_provider.dart';
 import '../community/community_hub_screen.dart';
 import '../profile/profile_screen.dart';
 import 'assign_route_screen.dart';
+import 'collection_requests_screen.dart';
 
 class RecyclingManagerDashboard extends StatefulWidget {
   const RecyclingManagerDashboard({super.key});
@@ -17,8 +18,9 @@ class _RecyclingManagerDashboardState
     extends State<RecyclingManagerDashboard> {
   int _selectedIndex = 0;
 
-  void _goToCommunity() => setState(() => _selectedIndex = 2);
-  void _goToAssignRoute() => setState(() => _selectedIndex = 1);
+  void _goToCommunity() => setState(() => _selectedIndex = 3);
+  void _goToAssignRoute() => setState(() => _selectedIndex = 2);
+  void _goToCollectionRequests() => setState(() => _selectedIndex = 1);
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +28,9 @@ class _RecyclingManagerDashboardState
       _RecyclingManagerHome(
         onGoToCommunity: _goToCommunity,
         onGoToAssignRoute: _goToAssignRoute,
+        onGoToCollectionRequests: _goToCollectionRequests,
       ),
+      const CollectionRequestsScreen(),
       const AssignRouteScreen(),
       const CommunityHubScreen(),
       const ProfileScreen(),
@@ -50,9 +54,14 @@ class _RecyclingManagerDashboardState
             label: 'Dashboard',
           ),
           NavigationDestination(
+            icon: Icon(Icons.inbox_outlined),
+            selectedIcon: Icon(Icons.inbox, color: Color(0xFF6A1B9A)),
+            label: 'Requests',
+          ),
+          NavigationDestination(
             icon: Icon(Icons.alt_route_outlined),
             selectedIcon: Icon(Icons.alt_route, color: Color(0xFF6A1B9A)),
-            label: 'Assign Routes',
+            label: 'Routes',
           ),
           NavigationDestination(
             icon: Icon(Icons.people_outline),
@@ -73,10 +82,12 @@ class _RecyclingManagerDashboardState
 class _RecyclingManagerHome extends StatefulWidget {
   final VoidCallback onGoToCommunity;
   final VoidCallback onGoToAssignRoute;
+  final VoidCallback onGoToCollectionRequests;
 
   const _RecyclingManagerHome({
     required this.onGoToCommunity,
     required this.onGoToAssignRoute,
+    required this.onGoToCollectionRequests,
   });
 
   @override
@@ -233,9 +244,9 @@ class _RecyclingManagerHomeState extends State<_RecyclingManagerHome> {
                     children: [
                       Expanded(
                         child: ElevatedButton.icon(
-                          onPressed: widget.onGoToAssignRoute,
-                          icon: const Icon(Icons.add_location_alt, size: 16),
-                          label: const Text('Assign Route',
+                          onPressed: widget.onGoToCollectionRequests,
+                          icon: const Icon(Icons.inbox, size: 16),
+                          label: const Text('View Requests',
                               style: TextStyle(fontSize: 12),
                               overflow: TextOverflow.ellipsis),
                           style: ElevatedButton.styleFrom(
@@ -251,10 +262,10 @@ class _RecyclingManagerHomeState extends State<_RecyclingManagerHome> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: OutlinedButton.icon(
-                          onPressed: widget.onGoToCommunity,
-                          icon: const Icon(Icons.people,
+                          onPressed: widget.onGoToAssignRoute,
+                          icon: const Icon(Icons.add_location_alt,
                               color: Colors.white, size: 16),
-                          label: const Text('Community',
+                          label: const Text('Assign Route',
                               style: TextStyle(color: Colors.white, fontSize: 12),
                               overflow: TextOverflow.ellipsis),
                           style: OutlinedButton.styleFrom(

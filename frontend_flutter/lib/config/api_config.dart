@@ -52,4 +52,12 @@ class ApiConfig {
   static String get myEngagement => '$baseUrl/community/engagement/me';
   static String get leaderboard => '$baseUrl/community/engagement/leaderboard';
   static String get communityStats => '$baseUrl/community/engagement/stats';
+
+  // Manager - Collection Requests
+  static String get managerCollectionRequests => '$baseUrl/manager/collection-requests';
+  static String managerRequestDetail(String id) => '$baseUrl/manager/collection-requests/$id';
+  static String managerAssignDriver(String id) => '$baseUrl/manager/collection-requests/$id/assign-driver';
+
+  // Manager - Drivers
+  static String get managerAvailableDrivers => '$baseUrl/manager/drivers/available';
 }

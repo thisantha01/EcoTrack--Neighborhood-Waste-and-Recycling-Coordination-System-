@@ -19,4 +19,12 @@ class AppRoutes {
 
   static const String recyclingManagerDashboard =
       '/recycling-manager-dashboard';
+
+  // Manager - Collection Requests
+  static const String collectionRequests =
+      '/manager/collection-requests';
+  static const String requestDetail =
+      '/manager/request-detail';
+  static const String assignDriver =
+      '/manager/assign-driver';
 }
