@@ -10,17 +10,7 @@ class ApiService {
     bool authenticated = false,
   }) async {
     try {
-      final headers = {
-        'Content-Type': 'application/json',
-      };
-
-      if (authenticated) {
-        final token = await StorageService.getToken();
-
-        if (token != null) {
-          headers['Authorization'] = 'Bearer $token';
-        }
-      }
+      final headers = await _buildHeaders(authenticated);
 
       final response = await http.post(
         Uri.parse(url),
@@ -30,9 +20,8 @@ class ApiService {
 
       return _handleResponse(response);
     } catch (e) {
-      throw Exception(
-        'Unable to connect to server: $e',
-      );
+      if (e is Exception) rethrow;
+      throw Exception('Unable to connect to server: $e');
     }
   }
 
@@ -41,17 +30,7 @@ class ApiService {
     bool authenticated = false,
   }) async {
     try {
-      final headers = {
-        'Content-Type': 'application/json',
-      };
-
-      if (authenticated) {
-        final token = await StorageService.getToken();
-
-        if (token != null) {
-          headers['Authorization'] = 'Bearer $token';
-        }
-      }
+      final headers = await _buildHeaders(authenticated);
 
       final response = await http.get(
         Uri.parse(url),
@@ -60,10 +39,64 @@ class ApiService {
 
       return _handleResponse(response);
     } catch (e) {
-      throw Exception(
-        'Unable to connect to server: $e',
-      );
+      if (e is Exception) rethrow;
+      throw Exception('Unable to connect to server: $e');
     }
+  }
+
+  Future<Map<String, dynamic>> put(
+    String url,
+    Map<String, dynamic> body, {
+    bool authenticated = false,
+  }) async {
+    try {
+      final headers = await _buildHeaders(authenticated);
+
+      final response = await http.put(
+        Uri.parse(url),
+        headers: headers,
+        body: jsonEncode(body),
+      );
+
+      return _handleResponse(response);
+    } catch (e) {
+      if (e is Exception) rethrow;
+      throw Exception('Unable to connect to server: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> delete(
+    String url, {
+    bool authenticated = false,
+  }) async {
+    try {
+      final headers = await _buildHeaders(authenticated);
+
+      final response = await http.delete(
+        Uri.parse(url),
+        headers: headers,
+      );
+
+      return _handleResponse(response);
+    } catch (e) {
+      if (e is Exception) rethrow;
+      throw Exception('Unable to connect to server: $e');
+    }
+  }
+
+  Future<Map<String, String>> _buildHeaders(bool authenticated) async {
+    final headers = <String, String>{
+      'Content-Type': 'application/json',
+    };
+
+    if (authenticated) {
+      final token = await StorageService.getToken();
+      if (token != null) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+    }
+
+    return headers;
   }
 
   Map<String, dynamic> _handleResponse(
@@ -74,29 +107,20 @@ class ApiService {
     try {
       decoded = jsonDecode(response.body);
     } catch (_) {
-      throw Exception(
-        'Invalid server response',
-      );
+      throw Exception('Invalid server response');
     }
 
-    if (response.statusCode >= 200 &&
-        response.statusCode < 300) {
+    if (response.statusCode >= 200 && response.statusCode < 300) {
       if (decoded is Map<String, dynamic>) {
         return decoded;
       }
-
-      return {
-        'success': true,
-        'data': decoded,
-      };
+      return {'success': true, 'data': decoded};
     }
 
     String message = 'Something went wrong';
 
     if (decoded is Map<String, dynamic>) {
-      message = decoded['message'] ??
-          decoded['error'] ??
-          message;
+      message = decoded['message'] ?? decoded['error'] ?? message;
     }
 
     throw Exception(message);
