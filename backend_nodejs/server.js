@@ -1,5 +1,12 @@
 require('dotenv').config();
 
+const dns = require('dns');
+
+dns.setServers([
+  '1.1.1.1',
+  '8.8.8.8',
+]);
+
 const express = require('express');
 const cors = require('cors');
 
@@ -34,8 +41,7 @@ app.use(
 app.get('/', (req, res) => {
   res.status(200).json({
     success: true,
-    message:
-      'Waste Management API is running',
+    message: 'Waste Management API is running',
   });
 });
 
