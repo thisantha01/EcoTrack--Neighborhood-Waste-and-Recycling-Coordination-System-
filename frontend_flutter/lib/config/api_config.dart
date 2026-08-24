@@ -2,8 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'dart:io';
 
 class ApiConfig {
-  // Android emulator uses 10.0.2.2 to reach host localhost.
-  // Windows desktop and Chrome use localhost directly.
   static String get baseUrl {
     if (kIsWeb) {
       return 'http://localhost:5000/api';
@@ -14,6 +12,7 @@ class ApiConfig {
     return 'http://localhost:5000/api';
   }
 
+  // Auth
   static String get register => '$baseUrl/auth/register';
   static String get verifyOtp => '$baseUrl/auth/verify-otp';
   static String get login => '$baseUrl/auth/login';
@@ -22,4 +21,35 @@ class ApiConfig {
   static String get verifyResetOtp => '$baseUrl/auth/verify-reset-otp';
   static String get resetPassword => '$baseUrl/auth/reset-password';
   static String get me => '$baseUrl/auth/me';
+
+  // Profile
+  static String get profile => '$baseUrl/profile';
+
+  // Community Posts
+  static String get communityPosts => '$baseUrl/community/posts';
+  static String communityPostLike(String id) => '$baseUrl/community/posts/$id/like';
+  static String communityPostComment(String id) => '$baseUrl/community/posts/$id/comments';
+  static String communityPostDelete(String id) => '$baseUrl/community/posts/$id';
+
+  // Cleanup Events
+  static String get cleanupEvents => '$baseUrl/community/events';
+  static String cleanupEvent(String id) => '$baseUrl/community/events/$id';
+  static String cleanupEventJoin(String id) => '$baseUrl/community/events/$id/join';
+  static String cleanupEventStatus(String id) => '$baseUrl/community/events/$id/status';
+
+  // Announcements
+  static String get announcements => '$baseUrl/community/announcements';
+  static String announcement(String id) => '$baseUrl/community/announcements/$id';
+
+  // Community Reports
+  static String get communityReports => '$baseUrl/community/reports';
+  static String communityReport(String id) => '$baseUrl/community/reports/$id';
+  static String communityReportUpvote(String id) => '$baseUrl/community/reports/$id/upvote';
+  static String communityReportInfo(String id) => '$baseUrl/community/reports/$id/info';
+  static String communityReportStatus(String id) => '$baseUrl/community/reports/$id/status';
+
+  // Engagement
+  static String get myEngagement => '$baseUrl/community/engagement/me';
+  static String get leaderboard => '$baseUrl/community/engagement/leaderboard';
+  static String get communityStats => '$baseUrl/community/engagement/stats';
 }

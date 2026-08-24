@@ -17,6 +17,12 @@ import 'screens/restaurant/restaurant_dashboard.dart';
 import 'screens/driver/driver_dashboard.dart';
 import 'screens/recycling_manager/recycling_manager_dashboard.dart';
 
+// Profile
+import 'screens/profile/profile_screen.dart';
+
+// Community
+import 'screens/community/community_hub_screen.dart';
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -36,19 +42,22 @@ class WasteManagementApp extends StatelessWidget {
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
 
-        title: 'Waste Management App',
+        title: 'EcoTrack',
 
         theme: ThemeData(
           useMaterial3: true,
 
           colorScheme: ColorScheme.fromSeed(
-            seedColor: Colors.green,
+            seedColor: const Color(0xFF2E7D32),
           ),
 
           scaffoldBackgroundColor: Colors.white,
 
+          fontFamily: 'Roboto',
+
           appBarTheme: const AppBarTheme(
             centerTitle: true,
+            elevation: 0,
           ),
 
           inputDecorationTheme: InputDecorationTheme(
@@ -62,14 +71,14 @@ class WasteManagementApp extends StatelessWidget {
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: Colors.grey,
+                color: Colors.grey.shade300,
               ),
             ),
 
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(
-                color: Colors.green,
+                color: Color(0xFF2E7D32),
                 width: 2,
               ),
             ),
@@ -89,39 +98,27 @@ class WasteManagementApp extends StatelessWidget {
           ),
         ),
 
-        // Application starts from Splash Screen
         initialRoute: '/',
 
         routes: {
-          // -----------------------------
           // Splash
-          // -----------------------------
           '/': (context) => const SplashScreen(),
 
-          // -----------------------------
           // Authentication
-          // -----------------------------
           '/login': (context) => const LoginScreen(),
-
           '/register': (context) => const RegisterScreen(),
+          '/forgot-password': (context) => const ForgotPasswordScreen(),
 
-          '/forgot-password': (context) =>
-              const ForgotPasswordScreen(),
-
-          // -----------------------------
           // Role-Based Dashboards
-          // -----------------------------
-          '/neighbour-dashboard': (context) =>
-              const NeighbourDashboard(),
-
-          '/restaurant-dashboard': (context) =>
-              const RestaurantDashboard(),
-
-          '/driver-dashboard': (context) =>
-              const DriverDashboard(),
-
+          '/neighbour-dashboard': (context) => const NeighbourDashboard(),
+          '/restaurant-dashboard': (context) => const RestaurantDashboard(),
+          '/driver-dashboard': (context) => const DriverDashboard(),
           '/recycling-manager-dashboard': (context) =>
               const RecyclingManagerDashboard(),
+
+          // Standalone routes
+          '/profile': (context) => const ProfileScreen(),
+          '/community': (context) => const CommunityHubScreen(),
         },
       ),
     );
