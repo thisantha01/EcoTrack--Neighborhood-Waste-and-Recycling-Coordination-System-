@@ -1,5 +1,12 @@
 require('dotenv').config();
 
+const dns = require('dns');
+
+dns.setServers([
+  '1.1.1.1',
+  '8.8.8.8',
+]);
+
 const express = require('express');
 const cors = require('cors');
 
@@ -12,6 +19,7 @@ const cleanupEventRoutes = require('./src/routes/cleanupEventRoutes');
 const announcementRoutes = require('./src/routes/announcementRoutes');
 const communityReportRoutes = require('./src/routes/communityReportRoutes');
 const engagementRoutes = require('./src/routes/engagementRoutes');
+
 
 const app = express();
 
@@ -40,17 +48,19 @@ app.use(
 app.get('/', (req, res) => {
   res.status(200).json({
     success: true,
-    message:
-      'EcoTrack API is running',
+    message: 'Waste Management API is running',
   });
 });
 
 
 // =====================================================
-// ROUTES
+// AUTH ROUTES
 // =====================================================
 
-app.use('/api/auth', authRoutes);
+app.use(
+  '/api/auth',
+  authRoutes
+);
 
 app.use('/api/profile', profileRoutes);
 
