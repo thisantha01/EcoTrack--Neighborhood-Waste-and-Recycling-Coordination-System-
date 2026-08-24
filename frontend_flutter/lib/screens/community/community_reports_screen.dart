@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../models/community_report_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/community_report_service.dart';
+import 'illegal_dumping_report_screen.dart';
 
 class CommunityReportsScreen extends StatefulWidget {
   const CommunityReportsScreen({super.key});
@@ -51,135 +52,6 @@ class _CommunityReportsScreenState extends State<CommunityReportsScreen>
   List<CommunityReport> _byStatus(String status) =>
       _reports.where((r) => r.status == status).toList();
 
-  Future<void> _showCreateDialog() async {
-    final titleCtrl = TextEditingController();
-    final descCtrl = TextEditingController();
-    final locationCtrl = TextEditingController();
-    String type = 'illegal_dumping';
-
-    final result = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setModal) => Padding(
-          padding: EdgeInsets.only(
-            left: 20,
-            right: 20,
-            top: 20,
-            bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
-          ),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  '🚨 Report an Issue',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  value: type,
-                  decoration: InputDecoration(
-                    labelText: 'Issue Type',
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                  ),
-                  items: [
-                    {'value': 'illegal_dumping', 'label': '🗑️ Illegal Dumping'},
-                    {'value': 'overflow', 'label': '⚠️ Bin Overflow'},
-                    {'value': 'contamination', 'label': '☢️ Contamination'},
-                    {'value': 'other', 'label': '❓ Other'},
-                  ]
-                      .map((t) => DropdownMenuItem<String>(
-                            value: t['value'],
-                            child: Text(t['label']!),
-                          ))
-                      .toList(),
-                  onChanged: (v) => setModal(() => type = v ?? 'illegal_dumping'),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: titleCtrl,
-                  decoration: InputDecoration(
-                    labelText: 'Title',
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: descCtrl,
-                  maxLines: 3,
-                  decoration: InputDecoration(
-                    labelText: 'Description',
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: locationCtrl,
-                  decoration: InputDecoration(
-                    labelText: 'Location',
-                    prefixIcon: const Icon(Icons.location_on),
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFD32F2F),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                    ),
-                    onPressed: () async {
-                      if (titleCtrl.text.trim().isEmpty ||
-                          descCtrl.text.trim().isEmpty ||
-                          locationCtrl.text.trim().isEmpty) {
-                        ScaffoldMessenger.of(ctx).showSnackBar(
-                          const SnackBar(
-                              content: Text('Please fill all required fields')),
-                        );
-                        return;
-                      }
-                      try {
-                        await _service.createReport(
-                          title: titleCtrl.text.trim(),
-                          description: descCtrl.text.trim(),
-                          location: locationCtrl.text.trim(),
-                          type: type,
-                        );
-                        if (ctx.mounted) Navigator.pop(ctx, true);
-                      } catch (e) {
-                        if (ctx.mounted) {
-                          ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
-                              content: Text(e
-                                  .toString()
-                                  .replaceFirst('Exception: ', ''))));
-                        }
-                      }
-                    },
-                    child: const Text('Submit Report'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-    if (result == true) _load();
-  }
-
   @override
   Widget build(BuildContext context) {
     final currentUserId =
@@ -205,7 +77,13 @@ class _CommunityReportsScreenState extends State<CommunityReportsScreen>
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showCreateDialog,
+        onPressed: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const IllegalDumpingReportScreen()),
+          );
+          if (result == true) _load();
+        },
         backgroundColor: const Color(0xFFD32F2F),
         foregroundColor: Colors.white,
         icon: const Icon(Icons.report),
