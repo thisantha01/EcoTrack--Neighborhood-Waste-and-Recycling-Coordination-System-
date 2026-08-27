@@ -6,8 +6,9 @@ class ApiConfig {
     if (kIsWeb) {
       return 'http://localhost:5000/api';
     }
-    if (!kIsWeb && Platform.isAndroid) {
-      return 'http://192.168.8.104:5000/api';
+    if (Platform.isAndroid) {
+      // Android emulators use 10.0.2.2 to access the development machine.
+      return 'http://10.0.2.2:5000/api';
     }
     return 'http://localhost:5000/api';
   }

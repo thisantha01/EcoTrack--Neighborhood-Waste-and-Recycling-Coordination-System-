@@ -1,13 +1,38 @@
+import 'package:flutter/material.dart';
+
+class RequestUser {
+  final String id;
+  final String name;
+  final String? email;
+  final String? phone;
+  final String? profilePicture;
+  final String? vehicleType;
+
+  const RequestUser({
+    required this.id,
+    required this.name,
+    this.email,
+    this.phone,
+    this.profilePicture,
+    this.vehicleType,
+  });
+
+  factory RequestUser.fromJson(Map<String, dynamic> json) => RequestUser(
+    id: json['_id'] ?? json['id'] ?? '',
+    name: json['name'] ?? '',
+    email: json['email'],
+    phone: json['phone'],
+    profilePicture: json['profilePicture'],
+    vehicleType: json['vehicleType'],
+  );
+}
+
 class StatusEntry {
   final String status;
   final DateTime timestamp;
   final String note;
 
-  StatusEntry({
-    required this.status,
-    required this.timestamp,
-    this.note = '',
-  });
+  StatusEntry({required this.status, required this.timestamp, this.note = ''});
 
   factory StatusEntry.fromJson(Map<String, dynamic> json) {
     return StatusEntry(
@@ -23,6 +48,7 @@ class CollectionRequest {
   final String requesterId;
   final String requesterName;
   final String? requesterPicture;
+  final RequestUser? requester;
   final String wasteType;
   final double estimatedQuantity;
   final String description;
@@ -36,13 +62,16 @@ class CollectionRequest {
   final List<StatusEntry> statusHistory;
   final String? assignedDriverId;
   final String? assignedDriverName;
+  final RequestUser? assignedDriver;
   final DateTime createdAt;
+  final DateTime? updatedAt;
 
   CollectionRequest({
     required this.id,
     required this.requesterId,
     required this.requesterName,
     this.requesterPicture,
+    this.requester,
     required this.wasteType,
     required this.estimatedQuantity,
     this.description = '',
@@ -56,18 +85,27 @@ class CollectionRequest {
     this.statusHistory = const [],
     this.assignedDriverId,
     this.assignedDriverName,
+    this.assignedDriver,
     required this.createdAt,
+    this.updatedAt,
   });
 
   factory CollectionRequest.fromJson(Map<String, dynamic> json) {
-    final requester = json['requester'];
-    final assignedDriver = json['assignedDriver'];
+    final requesterJson = json['requester'];
+    final assignedDriverJson = json['assignedDriver'];
+    final requester = requesterJson is Map
+        ? RequestUser.fromJson(Map<String, dynamic>.from(requesterJson))
+        : null;
+    final assignedDriver = assignedDriverJson is Map
+        ? RequestUser.fromJson(Map<String, dynamic>.from(assignedDriverJson))
+        : null;
 
     return CollectionRequest(
       id: json['_id'] ?? json['id'] ?? '',
-      requesterId: requester is Map ? requester['_id'] ?? '' : '',
-      requesterName: requester is Map ? requester['name'] ?? '' : '',
-      requesterPicture: requester is Map ? requester['profilePicture'] : null,
+      requesterId: requester?.id ?? '',
+      requesterName: requester?.name ?? '',
+      requesterPicture: requester?.profilePicture,
+      requester: requester,
       wasteType: json['wasteType'] ?? '',
       estimatedQuantity: (json['estimatedQuantity'] ?? 0).toDouble(),
       description: json['description'] ?? '',
@@ -80,13 +118,20 @@ class CollectionRequest {
           : null,
       preferredTime: json['preferredTime'],
       status: json['status'] ?? 'requested',
-      statusHistory: (json['statusHistory'] as List<dynamic>?)
+      statusHistory:
+          (json['statusHistory'] as List<dynamic>?)
               ?.map((e) => StatusEntry.fromJson(e))
               .toList() ??
           [],
-      assignedDriverId: assignedDriver is Map ? assignedDriver['_id'] : null,
-      assignedDriverName: assignedDriver is Map ? assignedDriver['name'] : null,
-      createdAt: DateTime.parse(json['createdAt']),
+      assignedDriverId: assignedDriver?.id,
+      assignedDriverName: assignedDriver?.name,
+      assignedDriver: assignedDriver,
+      createdAt:
+          DateTime.tryParse(json['createdAt']?.toString() ?? '') ??
+          DateTime.now(),
+      updatedAt: json['updatedAt'] == null
+          ? null
+          : DateTime.tryParse(json['updatedAt'].toString()),
     );
   }
 
@@ -125,6 +170,44 @@ class CollectionRequest {
         return 'Cancelled';
       default:
         return status;
+    }
+  }
+
+  static Color getStatusColor(String status) {
+    switch (status) {
+      case 'requested':
+        return Colors.orange;
+      case 'accepted':
+        return Colors.blue;
+      case 'scheduled':
+        return Colors.deepPurple;
+      case 'collected':
+        return Colors.green;
+      case 'cancelled':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  static IconData getWasteTypeIcon(String wasteType) {
+    switch (wasteType) {
+      case 'organic':
+        return Icons.compost;
+      case 'plastic':
+        return Icons.local_drink;
+      case 'paper':
+        return Icons.description_outlined;
+      case 'glass':
+        return Icons.wine_bar_outlined;
+      case 'metal':
+        return Icons.hardware;
+      case 'electronic':
+        return Icons.devices_other;
+      case 'hazardous':
+        return Icons.warning_amber_rounded;
+      default:
+        return Icons.delete_outline;
     }
   }
 }

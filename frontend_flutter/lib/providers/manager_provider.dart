@@ -8,13 +8,13 @@ class ManagerProvider extends ChangeNotifier {
   final ManagerService _managerService = ManagerService();
 
   // Collection Requests
-  List<CollectionRequestModel> _requests = [];
+  List<CollectionRequest> _requests = [];
   int _totalRequests = 0;
   int _currentPage = 1;
   bool _hasMore = true;
 
   // Current request detail
-  CollectionRequestModel? _selectedRequest;
+  CollectionRequest? _selectedRequest;
   DriverAssignmentModel? _selectedRequestAssignment;
 
   // Available drivers
@@ -34,11 +34,11 @@ class ManagerProvider extends ChangeNotifier {
   String? _error;
 
   // Getters
-  List<CollectionRequestModel> get requests => _requests;
+  List<CollectionRequest> get requests => _requests;
   int get totalRequests => _totalRequests;
   int get currentPage => _currentPage;
   bool get hasMore => _hasMore;
-  CollectionRequestModel? get selectedRequest => _selectedRequest;
+  CollectionRequest? get selectedRequest => _selectedRequest;
   DriverAssignmentModel? get selectedRequestAssignment =>
       _selectedRequestAssignment;
   List<Map<String, dynamic>> get availableDrivers => _availableDrivers;
@@ -55,9 +55,7 @@ class ManagerProvider extends ChangeNotifier {
   // FETCH COLLECTION REQUESTS
   // =====================================================
 
-  Future<void> fetchCollectionRequests({
-    bool refresh = false,
-  }) async {
+  Future<void> fetchCollectionRequests({bool refresh = false}) async {
     if (refresh) {
       _currentPage = 1;
       _requests = [];
@@ -78,17 +76,12 @@ class ManagerProvider extends ChangeNotifier {
         limit: 20,
       );
 
-      final List<dynamic> requestData =
-          response['requests'] ?? [];
-      final List<CollectionRequestModel> newRequests =
-          requestData
-              .map((r) => CollectionRequestModel.fromJson(
-                    Map<String, dynamic>.from(r),
-                  ))
-              .toList();
+      final List<dynamic> requestData = response['requests'] ?? [];
+      final List<CollectionRequest> newRequests = requestData
+          .map((r) => CollectionRequest.fromJson(Map<String, dynamic>.from(r)))
+          .toList();
 
-      final pagination =
-          response['pagination'] as Map<String, dynamic>?;
+      final pagination = response['pagination'] as Map<String, dynamic>?;
       final int total = pagination?['total'] ?? 0;
 
       if (refresh) {
@@ -120,18 +113,17 @@ class ManagerProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final response =
-          await _managerService.getRequestDetails(requestId);
+      final response = await _managerService.getRequestDetails(requestId);
 
       final requestData = response['request'];
       if (requestData is Map<String, dynamic>) {
-        _selectedRequest =
-            CollectionRequestModel.fromJson(requestData);
+        _selectedRequest = CollectionRequest.fromJson(requestData);
 
         final assignmentData = requestData['assignment'];
         if (assignmentData is Map<String, dynamic>) {
-          _selectedRequestAssignment =
-              DriverAssignmentModel.fromJson(assignmentData);
+          _selectedRequestAssignment = DriverAssignmentModel.fromJson(
+            assignmentData,
+          );
         }
       }
     } catch (e) {
@@ -152,11 +144,9 @@ class ManagerProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final response =
-          await _managerService.getAvailableDrivers();
+      final response = await _managerService.getAvailableDrivers();
 
-      final List<dynamic> driverData =
-          response['drivers'] ?? [];
+      final List<dynamic> driverData = response['drivers'] ?? [];
       _availableDrivers = driverData
           .map((d) => Map<String, dynamic>.from(d))
           .toList();
@@ -187,30 +177,26 @@ class ManagerProvider extends ChangeNotifier {
       );
 
       // Update the selected request if it matches
-      if (_selectedRequest != null &&
-          _selectedRequest!.id == requestId) {
+      if (_selectedRequest != null && _selectedRequest!.id == requestId) {
         final requestData = response['request'];
         if (requestData is Map<String, dynamic>) {
-          _selectedRequest =
-              CollectionRequestModel.fromJson(requestData);
+          _selectedRequest = CollectionRequest.fromJson(requestData);
         }
 
         final assignmentData = response['assignment'];
         if (assignmentData is Map<String, dynamic>) {
-          _selectedRequestAssignment =
-              DriverAssignmentModel.fromJson(assignmentData);
+          _selectedRequestAssignment = DriverAssignmentModel.fromJson(
+            assignmentData,
+          );
         }
       }
 
       // Also update in the list
-      final index = _requests.indexWhere(
-        (r) => r.id == requestId,
-      );
+      final index = _requests.indexWhere((r) => r.id == requestId);
       if (index != -1) {
         final requestData = response['request'];
         if (requestData is Map<String, dynamic>) {
-          _requests[index] =
-              CollectionRequestModel.fromJson(requestData);
+          _requests[index] = CollectionRequest.fromJson(requestData);
         }
       }
 
@@ -229,11 +215,7 @@ class ManagerProvider extends ChangeNotifier {
   // FILTERS
   // =====================================================
 
-  void setFilter({
-    String? status,
-    String? wasteType,
-    String? date,
-  }) {
+  void setFilter({String? status, String? wasteType, String? date}) {
     _filterStatus = status;
     _filterWasteType = wasteType;
     _filterDate = date;
@@ -248,9 +230,7 @@ class ManagerProvider extends ChangeNotifier {
   }
 
   bool get hasActiveFilters =>
-      _filterStatus != null ||
-      _filterWasteType != null ||
-      _filterDate != null;
+      _filterStatus != null || _filterWasteType != null || _filterDate != null;
 
   // =====================================================
   // CLEAR

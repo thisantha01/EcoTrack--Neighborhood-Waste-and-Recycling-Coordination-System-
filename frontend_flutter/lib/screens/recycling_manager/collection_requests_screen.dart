@@ -14,17 +14,14 @@ class CollectionRequestsScreen extends StatefulWidget {
       _CollectionRequestsScreenState();
 }
 
-class _CollectionRequestsScreenState
-    extends State<CollectionRequestsScreen> {
+class _CollectionRequestsScreenState extends State<CollectionRequestsScreen> {
   final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ManagerProvider>().fetchCollectionRequests(
-            refresh: true,
-          );
+      context.read<ManagerProvider>().fetchCollectionRequests(refresh: true);
     });
 
     _scrollController.addListener(_onScroll);
@@ -69,16 +66,14 @@ class _CollectionRequestsScreenState
                 children: [
                   const Text(
                     'Filter Requests',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
 
-                  const Text('Status',
-                      style:
-                          TextStyle(fontWeight: FontWeight.w600)),
+                  const Text(
+                    'Status',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 8,
@@ -87,46 +82,46 @@ class _CollectionRequestsScreenState
                       _filterChip(
                         label: 'All',
                         selected: tempStatus == null,
-                        onTap: () =>
-                            setModalState(() => tempStatus = null),
+                        onTap: () => setModalState(() => tempStatus = null),
                       ),
                       _filterChip(
                         label: 'Requested',
                         selected: tempStatus == 'requested',
-                        onTap: () => setModalState(
-                            () => tempStatus = 'requested'),
+                        onTap: () =>
+                            setModalState(() => tempStatus = 'requested'),
                       ),
                       _filterChip(
                         label: 'Accepted',
                         selected: tempStatus == 'accepted',
-                        onTap: () => setModalState(
-                            () => tempStatus = 'accepted'),
+                        onTap: () =>
+                            setModalState(() => tempStatus = 'accepted'),
                       ),
                       _filterChip(
                         label: 'Scheduled',
                         selected: tempStatus == 'scheduled',
-                        onTap: () => setModalState(
-                            () => tempStatus = 'scheduled'),
+                        onTap: () =>
+                            setModalState(() => tempStatus = 'scheduled'),
                       ),
                       _filterChip(
                         label: 'Collected',
                         selected: tempStatus == 'collected',
-                        onTap: () => setModalState(
-                            () => tempStatus = 'collected'),
+                        onTap: () =>
+                            setModalState(() => tempStatus = 'collected'),
                       ),
                       _filterChip(
                         label: 'Cancelled',
                         selected: tempStatus == 'cancelled',
-                        onTap: () => setModalState(
-                            () => tempStatus = 'cancelled'),
+                        onTap: () =>
+                            setModalState(() => tempStatus = 'cancelled'),
                       ),
                     ],
                   ),
                   const SizedBox(height: 16),
 
-                  const Text('Waste Type',
-                      style:
-                          TextStyle(fontWeight: FontWeight.w600)),
+                  const Text(
+                    'Waste Type',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 8,
@@ -135,52 +130,49 @@ class _CollectionRequestsScreenState
                       _filterChip(
                         label: 'All',
                         selected: tempWasteType == null,
-                        onTap: () => setModalState(
-                            () => tempWasteType = null),
+                        onTap: () => setModalState(() => tempWasteType = null),
                       ),
                       _filterChip(
                         label: 'Organic',
                         selected: tempWasteType == 'organic',
-                        onTap: () => setModalState(
-                            () => tempWasteType = 'organic'),
+                        onTap: () =>
+                            setModalState(() => tempWasteType = 'organic'),
                       ),
                       _filterChip(
                         label: 'Plastic',
                         selected: tempWasteType == 'plastic',
-                        onTap: () => setModalState(
-                            () => tempWasteType = 'plastic'),
+                        onTap: () =>
+                            setModalState(() => tempWasteType = 'plastic'),
                       ),
                       _filterChip(
                         label: 'Paper',
                         selected: tempWasteType == 'paper',
-                        onTap: () => setModalState(
-                            () => tempWasteType = 'paper'),
+                        onTap: () =>
+                            setModalState(() => tempWasteType = 'paper'),
                       ),
                       _filterChip(
                         label: 'Glass',
                         selected: tempWasteType == 'glass',
-                        onTap: () => setModalState(
-                            () => tempWasteType = 'glass'),
+                        onTap: () =>
+                            setModalState(() => tempWasteType = 'glass'),
                       ),
                       _filterChip(
                         label: 'Metal',
                         selected: tempWasteType == 'metal',
-                        onTap: () => setModalState(
-                            () => tempWasteType = 'metal'),
+                        onTap: () =>
+                            setModalState(() => tempWasteType = 'metal'),
                       ),
                       _filterChip(
                         label: 'Electronic',
-                        selected:
-                            tempWasteType == 'electronic',
-                        onTap: () => setModalState(
-                            () => tempWasteType = 'electronic'),
+                        selected: tempWasteType == 'electronic',
+                        onTap: () =>
+                            setModalState(() => tempWasteType = 'electronic'),
                       ),
                       _filterChip(
                         label: 'Hazardous',
-                        selected:
-                            tempWasteType == 'hazardous',
-                        onTap: () => setModalState(
-                            () => tempWasteType = 'hazardous'),
+                        selected: tempWasteType == 'hazardous',
+                        onTap: () =>
+                            setModalState(() => tempWasteType = 'hazardous'),
                       ),
                     ],
                   ),
@@ -192,8 +184,7 @@ class _CollectionRequestsScreenState
                         child: OutlinedButton(
                           onPressed: () {
                             provider.clearFilters();
-                            provider.fetchCollectionRequests(
-                                refresh: true);
+                            provider.fetchCollectionRequests(refresh: true);
                             Navigator.pop(ctx);
                           },
                           child: const Text('Clear All'),
@@ -203,8 +194,7 @@ class _CollectionRequestsScreenState
                       Expanded(
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                const Color(0xFF6A1B9A),
+                            backgroundColor: const Color(0xFF6A1B9A),
                             foregroundColor: Colors.white,
                           ),
                           onPressed: () {
@@ -212,8 +202,7 @@ class _CollectionRequestsScreenState
                               status: tempStatus,
                               wasteType: tempWasteType,
                             );
-                            provider.fetchCollectionRequests(
-                                refresh: true);
+                            provider.fetchCollectionRequests(refresh: true);
                             Navigator.pop(ctx);
                           },
                           child: const Text('Apply Filters'),
@@ -238,17 +227,12 @@ class _CollectionRequestsScreenState
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(
-            horizontal: 14, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: selected
-              ? const Color(0xFF6A1B9A)
-              : Colors.grey.shade100,
+          color: selected ? const Color(0xFF6A1B9A) : Colors.grey.shade100,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: selected
-                ? const Color(0xFF6A1B9A)
-                : Colors.grey.shade300,
+            color: selected ? const Color(0xFF6A1B9A) : Colors.grey.shade300,
           ),
         ),
         child: Text(
@@ -256,8 +240,7 @@ class _CollectionRequestsScreenState
           style: TextStyle(
             color: selected ? Colors.white : Colors.black87,
             fontSize: 13,
-            fontWeight:
-                selected ? FontWeight.bold : FontWeight.normal,
+            fontWeight: selected ? FontWeight.bold : FontWeight.normal,
           ),
         ),
       ),
@@ -285,9 +268,9 @@ class _CollectionRequestsScreenState
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {
-              context
-                  .read<ManagerProvider>()
-                  .fetchCollectionRequests(refresh: true);
+              context.read<ManagerProvider>().fetchCollectionRequests(
+                refresh: true,
+              );
             },
             tooltip: 'Refresh',
           ),
@@ -295,42 +278,38 @@ class _CollectionRequestsScreenState
       ),
       body: Consumer<ManagerProvider>(
         builder: (context, provider, child) {
-          if (provider.isLoadingRequests &&
-              provider.requests.isEmpty) {
+          if (provider.isLoadingRequests && provider.requests.isEmpty) {
             return const Center(
-              child: CircularProgressIndicator(
-                color: Color(0xFF6A1B9A),
-              ),
+              child: CircularProgressIndicator(color: Color(0xFF6A1B9A)),
             );
           }
 
-          if (provider.error != null &&
-              provider.requests.isEmpty) {
+          if (provider.error != null && provider.requests.isEmpty) {
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(24),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.error_outline,
-                        size: 48, color: Colors.red),
+                    const Icon(
+                      Icons.error_outline,
+                      size: 48,
+                      color: Colors.red,
+                    ),
                     const SizedBox(height: 16),
                     Text(
                       provider.error!,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
-                          fontSize: 14, color: Colors.grey),
+                      style: const TextStyle(fontSize: 14, color: Colors.grey),
                     ),
                     const SizedBox(height: 16),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            const Color(0xFF6A1B9A),
+                        backgroundColor: const Color(0xFF6A1B9A),
                         foregroundColor: Colors.white,
                       ),
-                      onPressed: () => provider
-                          .fetchCollectionRequests(
-                              refresh: true),
+                      onPressed: () =>
+                          provider.fetchCollectionRequests(refresh: true),
                       child: const Text('Retry'),
                     ),
                   ],
@@ -344,9 +323,11 @@ class _CollectionRequestsScreenState
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.inbox_outlined,
-                      size: 64,
-                      color: Colors.grey.shade400),
+                  Icon(
+                    Icons.inbox_outlined,
+                    size: 64,
+                    color: Colors.grey.shade400,
+                  ),
                   const SizedBox(height: 16),
                   const Text(
                     'No collection requests found',
@@ -361,10 +342,7 @@ class _CollectionRequestsScreenState
                     provider.hasActiveFilters
                         ? 'Try adjusting your filters'
                         : 'Requests will appear here when customers submit them',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey.shade500,
-                    ),
+                    style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
                   ),
                 ],
               ),
@@ -377,14 +355,17 @@ class _CollectionRequestsScreenState
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 8),
-                  color: const Color(0xFF6A1B9A)
-                      .withOpacity(0.08),
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  color: const Color(0xFF6A1B9A).withOpacity(0.08),
                   child: Row(
                     children: [
-                      const Icon(Icons.filter_list,
-                          size: 16,
-                          color: Color(0xFF6A1B9A)),
+                      const Icon(
+                        Icons.filter_list,
+                        size: 16,
+                        color: Color(0xFF6A1B9A),
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -399,8 +380,7 @@ class _CollectionRequestsScreenState
                       GestureDetector(
                         onTap: () {
                           provider.clearFilters();
-                          provider.fetchCollectionRequests(
-                              refresh: true);
+                          provider.fetchCollectionRequests(refresh: true);
                         },
                         child: const Text(
                           'Clear',
@@ -417,7 +397,9 @@ class _CollectionRequestsScreenState
 
               Padding(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 8),
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 child: Row(
                   children: [
                     Text(
@@ -433,15 +415,14 @@ class _CollectionRequestsScreenState
 
               Expanded(
                 child: RefreshIndicator(
-                  onRefresh: () => provider
-                      .fetchCollectionRequests(refresh: true),
+                  onRefresh: () =>
+                      provider.fetchCollectionRequests(refresh: true),
                   color: const Color(0xFF6A1B9A),
                   child: ListView.builder(
                     controller: _scrollController,
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: provider.requests.length +
-                        (provider.hasMore ? 1 : 0),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount:
+                        provider.requests.length + (provider.hasMore ? 1 : 0),
                     itemBuilder: (context, index) {
                       if (index == provider.requests.length) {
                         return const Padding(
@@ -453,8 +434,7 @@ class _CollectionRequestsScreenState
                           ),
                         );
                       }
-                      return _requestCard(
-                          provider.requests[index]);
+                      return _requestCard(provider.requests[index]);
                     },
                   ),
                 ),
@@ -480,12 +460,10 @@ class _CollectionRequestsScreenState
     return 'Filters: ${parts.join(' • ')}';
   }
 
-  Widget _requestCard(CollectionRequestModel request) {
-    final statusColor =
-        CollectionRequestModel.getStatusColor(request.status);
+  Widget _requestCard(CollectionRequest request) {
+    final statusColor = CollectionRequest.getStatusColor(request.status);
     final dateStr = request.preferredDate != null
-        ? DateFormat('MMM d, yyyy')
-            .format(request.preferredDate!)
+        ? DateFormat('MMM d, yyyy').format(request.preferredDate!)
         : 'Not set';
 
     return GestureDetector(
@@ -493,9 +471,7 @@ class _CollectionRequestsScreenState
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => RequestDetailScreen(
-              requestId: request.id,
-            ),
+            builder: (_) => RequestDetailScreen(requestId: request.id),
           ),
         );
       },
@@ -518,20 +494,16 @@ class _CollectionRequestsScreenState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              mainAxisAlignment:
-                  MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
                   child: Row(
                     children: [
                       CircleAvatar(
                         radius: 16,
-                        backgroundColor: statusColor
-                            .withOpacity(0.1),
+                        backgroundColor: statusColor.withOpacity(0.1),
                         child: Icon(
-                          CollectionRequestModel
-                              .getWasteTypeIcon(
-                                  request.wasteType),
+                          CollectionRequest.getWasteTypeIcon(request.wasteType),
                           color: statusColor,
                           size: 16,
                         ),
@@ -539,24 +511,20 @@ class _CollectionRequestsScreenState
                       const SizedBox(width: 10),
                       Expanded(
                         child: Column(
-                          crossAxisAlignment:
-                              CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              request.requester?.name ??
-                                  'Unknown',
+                              request.requester?.name ?? 'Unknown',
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 14,
                               ),
-                              overflow:
-                                  TextOverflow.ellipsis,
+                              overflow: TextOverflow.ellipsis,
                             ),
                             Text(
                               request.wasteTypeLabel,
                               style: TextStyle(
-                                color:
-                                    Colors.grey.shade600,
+                                color: Colors.grey.shade600,
                                 fontSize: 11,
                               ),
                             ),
@@ -568,12 +536,12 @@ class _CollectionRequestsScreenState
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 4),
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
-                    color:
-                        statusColor.withOpacity(0.1),
-                    borderRadius:
-                        BorderRadius.circular(6),
+                    color: statusColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
                     request.statusLabel,
@@ -596,23 +564,21 @@ class _CollectionRequestsScreenState
                   flex: true,
                 ),
                 const SizedBox(width: 8),
-                _detailChip(
-                  Icons.calendar_today,
-                  dateStr,
-                ),
+                _detailChip(Icons.calendar_today, dateStr),
               ],
             ),
             const SizedBox(height: 8),
 
             Row(
-              mainAxisAlignment:
-                  MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
                   children: [
-                    Icon(Icons.person_outline,
-                        size: 14,
-                        color: Colors.grey.shade500),
+                    Icon(
+                      Icons.person_outline,
+                      size: 14,
+                      color: Colors.grey.shade500,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       request.assignedDriver != null
@@ -620,10 +586,9 @@ class _CollectionRequestsScreenState
                           : 'No driver assigned',
                       style: TextStyle(
                         fontSize: 11,
-                        color:
-                            request.assignedDriver != null
-                                ? Colors.black87
-                                : Colors.grey,
+                        color: request.assignedDriver != null
+                            ? Colors.black87
+                            : Colors.grey,
                       ),
                     ),
                   ],
@@ -645,33 +610,24 @@ class _CollectionRequestsScreenState
     );
   }
 
-  Widget _detailChip(
-    IconData icon,
-    String text, {
-    bool flex = false,
-  }) {
+  Widget _detailChip(IconData icon, String text, {bool flex = false}) {
     return Expanded(
       flex: flex ? 1 : 0,
       child: Container(
-        padding: const EdgeInsets.symmetric(
-            horizontal: 8, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
           color: Colors.grey.shade50,
           borderRadius: BorderRadius.circular(6),
         ),
         child: Row(
-          mainAxisSize:
-              flex ? MainAxisSize.max : MainAxisSize.min,
+          mainAxisSize: flex ? MainAxisSize.max : MainAxisSize.min,
           children: [
             Icon(icon, size: 12, color: Colors.grey),
             const SizedBox(width: 4),
             Flexible(
               child: Text(
                 text,
-                style: TextStyle(
-                  fontSize: 10,
-                  color: Colors.grey.shade700,
-                ),
+                style: TextStyle(fontSize: 10, color: Colors.grey.shade700),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
