@@ -10,6 +10,8 @@ import 'widgets/metric_summary_card.dart';
 import 'widgets/next_pickup_card.dart';
 import 'widgets/route_progress_card.dart';
 
+import '../profile/profile_screen.dart'; 
+
 class DriverDashboard extends StatefulWidget {
   const DriverDashboard({super.key});
 
@@ -18,6 +20,57 @@ class DriverDashboard extends StatefulWidget {
 }
 
 class _DriverDashboardState extends State<DriverDashboard> {
+  int _selectedIndex = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    // Define the pages for the bottom navigation
+    final List<Widget> pages = [
+      const _DriverHome(),
+      const TodayScheduleScreen(),
+      const ProfileScreen(),
+    ];
+
+    return Scaffold(
+      body: pages[_selectedIndex],
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _selectedIndex,
+        onDestinationSelected: (i) => setState(() => _selectedIndex = i),
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+        // Using a green tint to match the driver theme, similar to the manager's purple tint
+        indicatorColor: const Color(0xFFE8F5E9), 
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.dashboard_outlined),
+            selectedIcon: Icon(Icons.dashboard, color: Color(0xFF2E7D32)),
+            label: 'Dashboard',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.schedule_outlined),
+            selectedIcon: Icon(Icons.schedule, color: Color(0xFF2E7D32)),
+            label: 'Schedule',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.person_outline),
+            selectedIcon: Icon(Icons.person, color: Color(0xFF2E7D32)),
+            label: 'Profile',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Extracted the original dashboard content into its own widget to house the AppBar
+class _DriverHome extends StatefulWidget {
+  const _DriverHome();
+
+  @override
+  State<_DriverHome> createState() => _DriverHomeState();
+}
+
+class _DriverHomeState extends State<_DriverHome> {
   @override
   void initState() {
     super.initState();
@@ -33,86 +86,122 @@ class _DriverDashboardState extends State<DriverDashboard> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAF9),
-      body: SafeArea(
-        child: driverProvider.isDashboardLoading
-            ? const Center(
-                child: CircularProgressIndicator(color: Color(0xFF2E7D32)),
-              )
-            : RefreshIndicator(
-                color: const Color(0xFF2E7D32),
-                onRefresh: () => context.read<DriverProvider>().fetchDashboardData(),
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      DriverHeader(
-                        driverName: driverName,
-                        isAvailable: driverProvider.isAvailable,
-                        onToggleAvailability: _toggleAvailability,
-                      ),
-                      const SizedBox(height: 12),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: MetricSummaryCard(
-                                iconWidget: const Icon(
-                                  Icons.local_shipping_outlined,
-                                  color: Color(0xFF2E7D32),
-                                  size: 22,
-                                ),
-                                title: "Today's Pickups",
-                                count: driverProvider.totalPickups,
-                                onTap: _openSchedule,
+      // --- ADDED HEADER (AppBar) WITH LOGOUT ---
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF2E7D32),
+        foregroundColor: Colors.white,
+        title: const Text('EcoTrack',
+            style: TextStyle(fontWeight: FontWeight.bold)),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () async {
+              final confirmed = await showDialog<bool>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text('Logout'),
+                  content: const Text('Are you sure you want to logout?'),
+                  actions: [
+                    TextButton(
+                        onPressed: () => Navigator.pop(ctx, false),
+                        child: const Text('Cancel')),
+                    ElevatedButton(
+                        onPressed: () => Navigator.pop(ctx, true),
+                        child: const Text('Logout')),
+                  ],
+                ),
+              );
+              if (confirmed == true && context.mounted) {
+                await context.read<AuthProvider>().logout();
+                if (context.mounted) {
+                  Navigator.pushNamedAndRemoveUntil(
+                      context, '/login', (r) => false);
+                }
+              }
+            },
+          ),
+        ],
+      ),
+      // --- ORIGINAL BODY CONTENT (Unchanged) ---
+      body: driverProvider.isDashboardLoading
+          ? const Center(
+              child: CircularProgressIndicator(color: Color(0xFF2E7D32)),
+            )
+          : RefreshIndicator(
+              color: const Color(0xFF2E7D32),
+              onRefresh: () =>
+                  context.read<DriverProvider>().fetchDashboardData(),
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    DriverHeader(
+                      driverName: driverName,
+                      isAvailable: driverProvider.isAvailable,
+                      onToggleAvailability: _toggleAvailability,
+                    ),
+                    const SizedBox(height: 12),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: MetricSummaryCard(
+                              iconWidget: const Icon(
+                                Icons.local_shipping_outlined,
+                                color: Color(0xFF2E7D32),
+                                size: 22,
                               ),
+                              title: "Today's Pickups",
+                              count: driverProvider.totalPickups,
+                              onTap: _openSchedule,
                             ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: MetricSummaryCard(
-                                iconWidget: _metricIcon(Icons.check),
-                                title: 'Completed',
-                                count: driverProvider.completedPickups,
-                                onTap: _openSchedule,
-                              ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: MetricSummaryCard(
+                              iconWidget: _metricIcon(Icons.check),
+                              title: 'Completed',
+                              count: driverProvider.completedPickups,
+                              onTap: _openSchedule,
                             ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: MetricSummaryCard(
-                                iconWidget: _metricIcon(Icons.access_time_filled),
-                                title: 'Remaining',
-                                count: driverProvider.remainingPickups,
-                                onTap: _openSchedule,
-                              ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: MetricSummaryCard(
+                              iconWidget: _metricIcon(Icons.access_time_filled),
+                              title: 'Remaining',
+                              count: driverProvider.remainingPickups,
+                              onTap: _openSchedule,
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 20),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: RouteProgressCard(
-                          completedStops: driverProvider.completedPickups,
-                          totalStops: driverProvider.totalPickups,
-                          onViewRoute: _openSchedule,
-                        ),
+                    ),
+                    const SizedBox(height: 20),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: RouteProgressCard(
+                        completedStops: driverProvider.completedPickups,
+                        totalStops: driverProvider.totalPickups,
+                        onViewRoute: _openSchedule,
                       ),
-                      const SizedBox(height: 20),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: NextPickupCard(
-                          pickup: driverProvider.nextPickup,
-                          onViewPickup: _showPickupDetails,
-                          onStartPickup: _updatePickup,
-                        ),
+                    ),
+                    const SizedBox(height: 20),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: NextPickupCard(
+                        pickup: driverProvider.nextPickup,
+                        onViewPickup: _showPickupDetails,
+                        onStartPickup: _updatePickup,
                       ),
-                      const SizedBox(height: 24),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
                 ),
               ),
-      ),
+            ),
     );
   }
 
