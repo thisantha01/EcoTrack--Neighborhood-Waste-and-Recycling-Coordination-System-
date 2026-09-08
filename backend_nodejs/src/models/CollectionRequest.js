@@ -64,6 +64,25 @@ const collectionRequestSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     default: null
+  },
+  suggestedRoute: {
+    route: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Route',
+      default: null
+    },
+    distanceKm: {
+      type: Number,
+      default: null
+    },
+    reason: {
+      type: String,
+      default: ''
+    },
+    suggestedAt: {
+      type: Date,
+      default: null
+    }
   }
 }, {
   timestamps: true

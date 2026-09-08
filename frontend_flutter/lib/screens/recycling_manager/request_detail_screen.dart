@@ -5,7 +5,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../providers/manager_provider.dart';
 import '../../models/collection_request_model.dart';
-import 'assign_driver_screen.dart';
+import 'manager_assignment_screen.dart';
+import 'manager_request_map_screen.dart';
 
 class RequestDetailScreen extends StatefulWidget {
   final String requestId;
@@ -25,32 +26,13 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
     });
   }
 
-  void _navigateToAssignDriver() {
-    final provider = context.read<ManagerProvider>();
-    final request = provider.selectedRequest;
-    if (request == null) return;
-
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => AssignDriverScreen(
-          requestId: request.id,
-          requestWasteType: request.wasteTypeLabel,
-          requestLocation: request.location,
-        ),
-      ),
-    ).then((_) {
-      provider.fetchRequestDetail(widget.requestId);
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F8FA),
+      backgroundColor: const Color(0xFFF7FBFB),
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: const Color(0xFF6A1B9A),
+        backgroundColor: const Color(0xFF0097A7),
         foregroundColor: Colors.white,
         title: const Text(
           'Request Details',
@@ -61,7 +43,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
         builder: (context, provider, child) {
           if (provider.isLoadingRequestDetail) {
             return const Center(
-              child: CircularProgressIndicator(color: Color(0xFF6A1B9A)),
+              child: CircularProgressIndicator(color: Color(0xFF0097A7)),
             );
           }
 
@@ -86,7 +68,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                     const SizedBox(height: 16),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF6A1B9A),
+                        backgroundColor: const Color(0xFF0097A7),
                         foregroundColor: Colors.white,
                       ),
                       onPressed: () =>
@@ -105,9 +87,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
           }
 
           final statusColor = CollectionRequest.getStatusColor(request.status);
-          final createdStr = request.createdAt != null
-              ? DateFormat('MMM d, yyyy • h:mm a').format(request.createdAt!)
-              : 'N/A';
+            final createdStr = DateFormat('MMM d, yyyy • h:mm a').format(request.createdAt);
           final pickupDateStr = request.preferredDate != null
               ? DateFormat('EEEE, MMM d, yyyy').format(request.preferredDate!)
               : 'Not set';
@@ -124,7 +104,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [statusColor, statusColor.withOpacity(0.8)],
+                      colors: [statusColor, statusColor.withValues(alpha: 0.8)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
@@ -149,7 +129,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
@@ -246,7 +226,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                           child: const Text(
                             'View',
                             style: TextStyle(
-                              color: Color(0xFF6A1B9A),
+                              color: Color(0xFF0097A7),
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -351,11 +331,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                         Icons.history,
                         entry.status[0].toUpperCase() +
                             entry.status.substring(1),
-                        entry.timestamp != null
-                            ? DateFormat(
-                                'MMM d, yyyy • h:mm a',
-                              ).format(entry.timestamp!)
-                            : '',
+                        DateFormat('MMM d, yyyy • h:mm a').format(entry.timestamp),
                       );
                     }).toList(),
                   ),
@@ -380,29 +356,41 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                if (request.assignedDriver == null)
-                  SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF6A1B9A),
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ManagerRequestMapScreen(request: request),
+                          ),
                         ),
-                      ),
-                      onPressed: _navigateToAssignDriver,
-                      icon: const Icon(Icons.person_add),
-                      label: const Text(
-                        'Assign Driver',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        icon: const Icon(Icons.map_outlined),
+                        label: const Text('View on Map'),
                       ),
                     ),
-                  ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF0097A7),
+                          foregroundColor: Colors.white,
+                        ),
+                        onPressed: request.status == 'requested'
+                            ? () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => ManagerAssignmentScreen(request: request),
+                                  ),
+                                ).then((_) => provider.fetchRequestDetail(widget.requestId))
+                            : null,
+                        icon: const Icon(Icons.assignment_turned_in),
+                        label: const Text('Assign Collection'),
+                      ),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 16),
               ],
             ),

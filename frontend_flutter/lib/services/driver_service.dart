@@ -40,6 +40,26 @@ class DriverService {
     }
   }
 
+  Future<List<Map<String, dynamic>>> getAssignedRoutes() async {
+    try {
+      final response = await _apiService.get(
+        ApiConfig.driverRoutes,
+        authenticated: true,
+      );
+      final routes = response['routes'];
+      if (routes is List) {
+        return routes
+            .whereType<Map>()
+            .map((route) => Map<String, dynamic>.from(route))
+            .toList();
+      }
+      return const [];
+    } catch (e) {
+      debugPrint('DriverService.getAssignedRoutes error: $e');
+      rethrow;
+    }
+  }
+
   Future<bool> updateAvailability(bool isAvailable) async {
     try {
       await _apiService.patch(

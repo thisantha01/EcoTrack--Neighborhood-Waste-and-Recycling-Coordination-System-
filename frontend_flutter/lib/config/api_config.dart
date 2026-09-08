@@ -63,10 +63,19 @@ class ApiConfig {
   static String get communityStats => '$baseUrl/community/engagement/stats';
 
   // Manager - Collection Requests
+  static String get managerDashboardStats => '$baseUrl/manager/dashboard-stats';
   static String get managerCollectionRequests => '$baseUrl/manager/collection-requests';
   static String managerRequestDetail(String id) => '$baseUrl/manager/collection-requests/$id';
   static String managerAssignDriver(String id) => '$baseUrl/manager/collection-requests/$id/assign-driver';
 
   // Manager - Drivers
   static String get managerAvailableDrivers => '$baseUrl/manager/drivers/available';
+  static String get managerRoutes => '$baseUrl/manager/routes';
+  static String managerRoute(String id) => '$baseUrl/manager/routes/$id';
+  static String managerRouteConfirm(String id) => '$baseUrl/manager/routes/$id/confirm-request';
+  static String managerRouteChangeDriver(String id) => '$baseUrl/manager/routes/$id/change-driver';
+  static String get managerRouteSuggestion => '$baseUrl/manager/routes/suggest-route';
+
+  // Driver fixed routes
+  static String get driverRoutes => '$baseUrl/driver/routes';
 }

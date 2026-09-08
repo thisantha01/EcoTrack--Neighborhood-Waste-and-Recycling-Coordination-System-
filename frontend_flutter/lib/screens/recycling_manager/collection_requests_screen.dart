@@ -194,7 +194,7 @@ class _CollectionRequestsScreenState extends State<CollectionRequestsScreen> {
                       Expanded(
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF6A1B9A),
+                            backgroundColor: const Color(0xFF0097A7),
                             foregroundColor: Colors.white,
                           ),
                           onPressed: () {
@@ -229,10 +229,10 @@ class _CollectionRequestsScreenState extends State<CollectionRequestsScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? const Color(0xFF6A1B9A) : Colors.grey.shade100,
+          color: selected ? const Color(0xFF0097A7) : Colors.grey.shade100,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: selected ? const Color(0xFF6A1B9A) : Colors.grey.shade300,
+            color: selected ? const Color(0xFF0097A7) : Colors.grey.shade300,
           ),
         ),
         child: Text(
@@ -250,10 +250,10 @@ class _CollectionRequestsScreenState extends State<CollectionRequestsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F8FA),
+      backgroundColor: const Color(0xFFF7FBFB),
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: const Color(0xFF6A1B9A),
+        backgroundColor: const Color(0xFF0097A7),
         foregroundColor: Colors.white,
         title: const Text(
           'Collection Requests',
@@ -280,7 +280,7 @@ class _CollectionRequestsScreenState extends State<CollectionRequestsScreen> {
         builder: (context, provider, child) {
           if (provider.isLoadingRequests && provider.requests.isEmpty) {
             return const Center(
-              child: CircularProgressIndicator(color: Color(0xFF6A1B9A)),
+              child: CircularProgressIndicator(color: Color(0xFF0097A7)),
             );
           }
 
@@ -305,7 +305,7 @@ class _CollectionRequestsScreenState extends State<CollectionRequestsScreen> {
                     const SizedBox(height: 16),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF6A1B9A),
+                        backgroundColor: const Color(0xFF0097A7),
                         foregroundColor: Colors.white,
                       ),
                       onPressed: () =>
@@ -358,13 +358,13 @@ class _CollectionRequestsScreenState extends State<CollectionRequestsScreen> {
                     horizontal: 16,
                     vertical: 8,
                   ),
-                  color: const Color(0xFF6A1B9A).withOpacity(0.08),
+                  color: const Color(0xFF0097A7).withOpacity(0.08),
                   child: Row(
                     children: [
                       const Icon(
                         Icons.filter_list,
                         size: 16,
-                        color: Color(0xFF6A1B9A),
+                        color: Color(0xFF0097A7),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
@@ -372,7 +372,7 @@ class _CollectionRequestsScreenState extends State<CollectionRequestsScreen> {
                           _buildFilterLabel(provider),
                           style: const TextStyle(
                             fontSize: 12,
-                            color: Color(0xFF6A1B9A),
+                            color: Color(0xFF0097A7),
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -386,7 +386,7 @@ class _CollectionRequestsScreenState extends State<CollectionRequestsScreen> {
                           'Clear',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Color(0xFF6A1B9A),
+                            color: Color(0xFF0097A7),
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -417,7 +417,7 @@ class _CollectionRequestsScreenState extends State<CollectionRequestsScreen> {
                 child: RefreshIndicator(
                   onRefresh: () =>
                       provider.fetchCollectionRequests(refresh: true),
-                  color: const Color(0xFF6A1B9A),
+                  color: const Color(0xFF0097A7),
                   child: ListView.builder(
                     controller: _scrollController,
                     padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -429,7 +429,7 @@ class _CollectionRequestsScreenState extends State<CollectionRequestsScreen> {
                           padding: EdgeInsets.all(16),
                           child: Center(
                             child: CircularProgressIndicator(
-                              color: Color(0xFF6A1B9A),
+                              color: Color(0xFF0097A7),
                             ),
                           ),
                         );

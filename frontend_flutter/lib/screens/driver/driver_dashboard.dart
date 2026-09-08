@@ -75,7 +75,11 @@ class _DriverHomeState extends State<_DriverHome> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback(
-      (_) => context.read<DriverProvider>().fetchDashboardData(),
+      (_) async {
+        final provider = context.read<DriverProvider>();
+        await provider.fetchDashboardData();
+        await provider.fetchAssignedRoutes();
+      },
     );
   }
 
@@ -188,6 +192,14 @@ class _DriverHomeState extends State<_DriverHome> {
                         onViewRoute: _openSchedule,
                       ),
                     ),
+                      const SizedBox(height: 20),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: _AssignedRoutesCard(
+                          routes: driverProvider.assignedRoutes,
+                          isLoading: driverProvider.isRoutesLoading,
+                        ),
+                      ),
                     const SizedBox(height: 20),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -284,5 +296,50 @@ class _DriverHomeState extends State<_DriverHome> {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(content: Text(message)));
+  }
+}
+
+class _AssignedRoutesCard extends StatelessWidget {
+  final List<Map<String, dynamic>> routes;
+  final bool isLoading;
+
+  const _AssignedRoutesCard({required this.routes, required this.isLoading});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: EdgeInsets.zero,
+      elevation: 0,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Assigned Fixed Routes',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            if (isLoading)
+              const Center(child: CircularProgressIndicator())
+            else if (routes.isEmpty)
+              const Text('No fixed routes assigned yet.')
+            else
+              ...routes.map((route) {
+                final stops = route['stops'] as List? ?? const [];
+                return ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.alt_route, color: Color(0xFF2E7D32)),
+                  title: Text(route['routeName']?.toString() ?? 'Route'),
+                  subtitle: Text(
+                    '${route['zone'] ?? 'Assigned area'} • ${stops.length} stops',
+                  ),
+                  trailing: Text(route['status']?.toString() ?? ''),
+                );
+              }),
+          ],
+        ),
+      ),
+    );
   }
 }

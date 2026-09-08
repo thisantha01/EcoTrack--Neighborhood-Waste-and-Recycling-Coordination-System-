@@ -20,6 +20,10 @@ class ManagerProvider extends ChangeNotifier {
   // Available drivers
   List<Map<String, dynamic>> _availableDrivers = [];
 
+  // Dashboard statistics
+  Map<String, int> _dashboardStats = {};
+  List<Map<String, dynamic>> _routes = [];
+
   // Filters
   String? _filterStatus;
   String? _filterWasteType;
@@ -30,6 +34,7 @@ class ManagerProvider extends ChangeNotifier {
   bool _isLoadingRequestDetail = false;
   bool _isLoadingDrivers = false;
   bool _isAssigning = false;
+  bool _isLoadingDashboardStats = false;
 
   String? _error;
 
@@ -42,6 +47,8 @@ class ManagerProvider extends ChangeNotifier {
   DriverAssignmentModel? get selectedRequestAssignment =>
       _selectedRequestAssignment;
   List<Map<String, dynamic>> get availableDrivers => _availableDrivers;
+  Map<String, int> get dashboardStats => _dashboardStats;
+  List<Map<String, dynamic>> get routes => List.unmodifiable(_routes);
   String? get filterStatus => _filterStatus;
   String? get filterWasteType => _filterWasteType;
   String? get filterDate => _filterDate;
@@ -49,7 +56,35 @@ class ManagerProvider extends ChangeNotifier {
   bool get isLoadingRequestDetail => _isLoadingRequestDetail;
   bool get isLoadingDrivers => _isLoadingDrivers;
   bool get isAssigning => _isAssigning;
+  bool get isLoadingDashboardStats => _isLoadingDashboardStats;
   String? get error => _error;
+
+  int dashboardStat(String key) => _dashboardStats[key] ?? 0;
+
+  // =====================================================
+  // FETCH DASHBOARD STATS
+  // =====================================================
+
+  Future<void> fetchDashboardStats() async {
+    if (_isLoadingDashboardStats) return;
+
+    _isLoadingDashboardStats = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final response = await _managerService.getDashboardStats();
+      _dashboardStats = {
+        for (final entry in response.entries)
+          if (entry.value is num) entry.key: (entry.value as num).toInt(),
+      };
+    } catch (e) {
+      _error = e.toString().replaceFirst('Exception: ', '');
+    } finally {
+      _isLoadingDashboardStats = false;
+      notifyListeners();
+    }
+  }
 
   // =====================================================
   // FETCH COLLECTION REQUESTS
@@ -98,6 +133,97 @@ class ManagerProvider extends ChangeNotifier {
     } finally {
       _isLoadingRequests = false;
       notifyListeners();
+    }
+  }
+
+  Future<void> fetchRoutes() async {
+    try {
+      final response = await _managerService.getRoutes();
+      final routeData = response['routes'];
+      if (routeData is List) {
+        _routes = routeData
+            .whereType<Map>()
+            .map((route) => Map<String, dynamic>.from(route))
+            .toList();
+      }
+      notifyListeners();
+    } catch (e) {
+      _error = e.toString().replaceFirst('Exception: ', '');
+      notifyListeners();
+    }
+  }
+
+  Future<String?> createRoute({
+    required String routeName,
+    required String zone,
+    required DateTime date,
+    String? description,
+    String? assignedDriver,
+    List<String> operatingDays = const [],
+  }) async {
+    try {
+      final response = await _managerService.createRoute(
+        routeName: routeName,
+        zone: zone,
+        date: date,
+        description: description,
+        assignedDriver: assignedDriver,
+        operatingDays: operatingDays,
+      );
+      final route = response['route'];
+      if (route is Map) {
+        final routeMap = Map<String, dynamic>.from(route);
+        _routes = [routeMap, ..._routes];
+        notifyListeners();
+        return routeMap['_id']?.toString();
+      }
+    } catch (e) {
+      _error = e.toString().replaceFirst('Exception: ', '');
+      notifyListeners();
+    }
+    return null;
+  }
+
+  Future<bool> changeRouteDriver({
+    required String routeId,
+    required String driverId,
+  }) async {
+    try {
+      final response = await _managerService.changeRouteDriver(
+        routeId: routeId,
+        driverId: driverId,
+      );
+      final route = response['route'];
+      if (route is Map) {
+        final routeMap = Map<String, dynamic>.from(route);
+        final index = _routes.indexWhere((item) => item['_id']?.toString() == routeId);
+        if (index == -1) {
+          _routes = [routeMap, ..._routes];
+        } else {
+          _routes[index] = routeMap;
+        }
+      }
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = e.toString().replaceFirst('Exception: ', '');
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<Map<String, dynamic>?> suggestRoute({
+    required double lat,
+    required double lng,
+  }) async {
+    try {
+      final response = await _managerService.suggestRoute(lat: lat, lng: lng);
+      final route = response['route'];
+      return route is Map ? Map<String, dynamic>.from(route) : null;
+    } catch (e) {
+      _error = e.toString().replaceFirst('Exception: ', '');
+      notifyListeners();
+      return null;
     }
   }
 
@@ -206,6 +332,37 @@ class ManagerProvider extends ChangeNotifier {
     } catch (e) {
       _error = e.toString().replaceFirst('Exception: ', '');
       _isAssigning = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> confirmRequestRoute({
+    required String routeId,
+    required String collectionRequestId,
+    required String driverId,
+    required DateTime date,
+    required String time,
+  }) async {
+    _error = null;
+    notifyListeners();
+
+    try {
+      final response = await _managerService.confirmRequestRoute(
+        routeId: routeId,
+        collectionRequestId: collectionRequestId,
+        driverId: driverId,
+        date: date,
+        time: time,
+      );
+      final requestData = response['request'];
+      if (requestData is Map<String, dynamic>) {
+        _selectedRequest = CollectionRequest.fromJson(requestData);
+      }
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = e.toString().replaceFirst('Exception: ', '');
       notifyListeners();
       return false;
     }

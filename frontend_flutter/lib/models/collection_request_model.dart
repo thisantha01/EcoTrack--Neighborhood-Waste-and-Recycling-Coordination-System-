@@ -63,6 +63,11 @@ class CollectionRequest {
   final String? assignedDriverId;
   final String? assignedDriverName;
   final RequestUser? assignedDriver;
+  final String? suggestedRouteId;
+  final String? suggestedRouteName;
+  final String? suggestedRouteDriverName;
+  final double? suggestedRouteDistanceKm;
+  final String? suggestedRouteReason;
   final DateTime createdAt;
   final DateTime? updatedAt;
 
@@ -86,6 +91,11 @@ class CollectionRequest {
     this.assignedDriverId,
     this.assignedDriverName,
     this.assignedDriver,
+    this.suggestedRouteId,
+    this.suggestedRouteName,
+    this.suggestedRouteDriverName,
+    this.suggestedRouteDistanceKm,
+    this.suggestedRouteReason,
     required this.createdAt,
     this.updatedAt,
   });
@@ -99,6 +109,18 @@ class CollectionRequest {
     final assignedDriver = assignedDriverJson is Map
         ? RequestUser.fromJson(Map<String, dynamic>.from(assignedDriverJson))
         : null;
+    final suggestedRouteJson = json['suggestedRoute'];
+    final suggestedRoute = suggestedRouteJson is Map
+      ? Map<String, dynamic>.from(suggestedRouteJson)
+      : null;
+    final suggestedRouteData = suggestedRoute?['route'];
+    final suggestedRouteMap = suggestedRouteData is Map
+      ? Map<String, dynamic>.from(suggestedRouteData)
+      : null;
+    final suggestedDriverData = suggestedRouteMap?['assignedDriver'];
+    final suggestedDriver = suggestedDriverData is Map
+      ? RequestUser.fromJson(Map<String, dynamic>.from(suggestedDriverData))
+      : null;
 
     return CollectionRequest(
       id: json['_id'] ?? json['id'] ?? '',
@@ -126,6 +148,13 @@ class CollectionRequest {
       assignedDriverId: assignedDriver?.id,
       assignedDriverName: assignedDriver?.name,
       assignedDriver: assignedDriver,
+        suggestedRouteId: suggestedRouteMap?['_id']?.toString() ??
+          suggestedRoute?['route']?.toString(),
+        suggestedRouteName: suggestedRouteMap?['routeName']?.toString(),
+        suggestedRouteDriverName: suggestedDriver?.name,
+        suggestedRouteDistanceKm:
+          (suggestedRoute?['distanceKm'] as num?)?.toDouble(),
+        suggestedRouteReason: suggestedRoute?['reason']?.toString(),
       createdAt:
           DateTime.tryParse(json['createdAt']?.toString() ?? '') ??
           DateTime.now(),

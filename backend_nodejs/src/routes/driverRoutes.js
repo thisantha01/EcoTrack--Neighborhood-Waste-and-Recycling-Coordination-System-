@@ -3,6 +3,7 @@ const router = express.Router();
 const { protect, authorizeRoles } = require('../middleware/authMiddleware');
 const {
   getDashboardOverview,
+  getAssignedRoutes,
   getTodaySchedule,
   updateAvailability,
   updatePickupStatus,
@@ -12,6 +13,7 @@ router.use(protect);
 router.use(authorizeRoles('driver'));
 
 router.get('/dashboard', getDashboardOverview);
+router.get('/routes', getAssignedRoutes);
 router.get('/schedule/today', getTodaySchedule);
 router.patch('/availability', updateAvailability);
 router.patch('/pickups/:id/status', updatePickupStatus);
