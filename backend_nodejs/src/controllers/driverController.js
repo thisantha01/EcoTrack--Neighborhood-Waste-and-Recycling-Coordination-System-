@@ -151,7 +151,7 @@ exports.updatePickupStatus = async (req, res) => {
     const { status } = req.body;
     const driverId = req.user._id;
 
-    const validStatuses = ['scheduled', 'accepted', 'completed', 'cancelled'];
+    const validStatuses = ['scheduled', 'accepted','en_route', 'completed', 'cancelled'];
     if (!status || !validStatuses.includes(status)) {
       return res.status(400).json({
         success: false,

@@ -99,12 +99,12 @@ class DriverProvider with ChangeNotifier {
     return wasUpdated;
   }
 
-  Future<bool> startPickup(String pickupId) => _updatePickupStatus(pickupId, 'accepted');
+  Future<bool> startPickup(String pickupId) => updatePickupStatus(pickupId, 'accepted');
 
   Future<bool> completePickup(String pickupId) =>
-      _updatePickupStatus(pickupId, 'completed');
+      updatePickupStatus(pickupId, 'completed');
 
-  Future<bool> _updatePickupStatus(String pickupId, String status) async {
+  Future<bool> updatePickupStatus(String pickupId, String status) async {
     final wasUpdated = await _driverService.updateStatus(pickupId, status);
     if (!wasUpdated) {
       _errorMessage = 'Could not update the pickup. Please try again.';

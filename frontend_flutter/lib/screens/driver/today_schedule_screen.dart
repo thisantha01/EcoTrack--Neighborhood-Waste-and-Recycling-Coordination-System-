@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../models/pickup_model.dart';
+
 import '../../providers/driver_provider.dart';
 import 'widgets/schedule_timeline_item.dart';
+
+
+import '../driver/pickup_detail_screen.dart'; 
+
 
 class TodayScheduleScreen extends StatefulWidget {
   const TodayScheduleScreen({super.key});
@@ -79,7 +83,16 @@ class _TodayScheduleScreenState extends State<TodayScheduleScreen> {
         return ScheduleTimelineItem(
           pickup: pickup,
           isLast: index == provider.scheduleList.length - 1,
-          onTap: () => _showPickupDetails(pickup),
+          onTap: () {
+            
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => PickupDetailScreen(pickup: pickup),
+              ),
+            );
+            
+          },
         );
       },
     );
@@ -90,45 +103,5 @@ class _TodayScheduleScreenState extends State<TodayScheduleScreen> {
     const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     final today = DateTime.now();
     return '${weekdays[today.weekday - 1]}, ${today.day} ${months[today.month - 1]}';
-  }
-
-  void _showPickupDetails(PickupModel pickup) {
-    showModalBottomSheet(
-      context: context,
-      showDragHandle: true,
-      builder: (sheetContext) => Padding(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Pickup ${pickup.pickupNumber}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
-            Text('Customer: ${pickup.customerName}'),
-            Text('Address: ${pickup.address}'),
-            Text('Scheduled: ${pickup.scheduledTime}'),
-            const SizedBox(height: 16),
-            if (pickup.status != 'completed')
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () async {
-                    final provider = context.read<DriverProvider>();
-                    final updated = pickup.status == 'accepted'
-                        ? await provider.completePickup(pickup.id)
-                        : await provider.startPickup(pickup.id);
-                    if (!mounted) return;
-                    Navigator.pop(sheetContext);
-                    if (!updated) {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not update the pickup. Please try again.')));
-                    }
-                  },
-                  child: Text(pickup.status == 'accepted' ? 'Complete Pickup' : 'Start Pickup'),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
   }
 }
