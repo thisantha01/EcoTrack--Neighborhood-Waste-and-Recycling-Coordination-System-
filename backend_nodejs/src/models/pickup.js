@@ -12,7 +12,7 @@ const pickupSchema = new mongoose.Schema(
     scheduledTime: { type: String, required: true },
     status: {
       type: String,
-      enum: ['scheduled', 'accepted', 'completed', 'cancelled'],
+      enum: ['scheduled', 'accepted', 'en_route', 'completed', 'cancelled'],
       default: 'scheduled',
     },
     notes: { type: String },
