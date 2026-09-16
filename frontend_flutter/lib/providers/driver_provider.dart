@@ -123,7 +123,7 @@ class DriverProvider with ChangeNotifier {
   }
 
   Future<bool> startPickup(String pickupId) =>
-      _updatePickupStatus(pickupId, 'accepted');
+      updatePickupStatus(pickupId, 'accepted');
 
   Future<bool> completePickup(String pickupId) =>
       updatePickupStatus(pickupId, 'completed');
