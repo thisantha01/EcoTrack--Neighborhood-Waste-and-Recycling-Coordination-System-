@@ -28,34 +28,46 @@ class ApiConfig {
 
   // Community Posts
   static String get communityPosts => '$baseUrl/community/posts';
-  static String communityPostLike(String id) => '$baseUrl/community/posts/$id/like';
-  static String communityPostComment(String id) => '$baseUrl/community/posts/$id/comments';
-  static String communityPostDelete(String id) => '$baseUrl/community/posts/$id';
+  static String communityPostLike(String id) =>
+      '$baseUrl/community/posts/$id/like';
+  static String communityPostComment(String id) =>
+      '$baseUrl/community/posts/$id/comments';
+  static String communityPostDelete(String id) =>
+      '$baseUrl/community/posts/$id';
 
   // Cleanup Events
   static String get cleanupEvents => '$baseUrl/community/events';
   static String cleanupEvent(String id) => '$baseUrl/community/events/$id';
-  static String cleanupEventJoin(String id) => '$baseUrl/community/events/$id/join';
-  static String cleanupEventStatus(String id) => '$baseUrl/community/events/$id/status';
+  static String cleanupEventJoin(String id) =>
+      '$baseUrl/community/events/$id/join';
+  static String cleanupEventStatus(String id) =>
+      '$baseUrl/community/events/$id/status';
 
   // Announcements
   static String get announcements => '$baseUrl/community/announcements';
-  static String announcement(String id) => '$baseUrl/community/announcements/$id';
+  static String announcement(String id) =>
+      '$baseUrl/community/announcements/$id';
 
   // Community Reports
   static String get communityReports => '$baseUrl/community/reports';
   static String communityReport(String id) => '$baseUrl/community/reports/$id';
-  static String communityReportUpvote(String id) => '$baseUrl/community/reports/$id/upvote';
-  static String communityReportInfo(String id) => '$baseUrl/community/reports/$id/info';
-  static String communityReportStatus(String id) => '$baseUrl/community/reports/$id/status';
+  static String communityReportUpvote(String id) =>
+      '$baseUrl/community/reports/$id/upvote';
+  static String communityReportInfo(String id) =>
+      '$baseUrl/community/reports/$id/info';
+  static String communityReportStatus(String id) =>
+      '$baseUrl/community/reports/$id/status';
 
   // Collection Requests
   static String get collectionRequests => '$baseUrl/collection-requests';
   static String get myCollectionRequests => '$baseUrl/collection-requests/my';
   static String get allCollectionRequests => '$baseUrl/collection-requests/all';
-  static String collectionRequest(String id) => '$baseUrl/collection-requests/$id';
-  static String collectionRequestStatus(String id) => '$baseUrl/collection-requests/$id/status';
-  static String collectionRequestCancel(String id) => '$baseUrl/collection-requests/$id/cancel';
+  static String collectionRequest(String id) =>
+      '$baseUrl/collection-requests/$id';
+  static String collectionRequestStatus(String id) =>
+      '$baseUrl/collection-requests/$id/status';
+  static String collectionRequestCancel(String id) =>
+      '$baseUrl/collection-requests/$id/cancel';
 
   // Engagement
   static String get myEngagement => '$baseUrl/community/engagement/me';
@@ -63,10 +75,26 @@ class ApiConfig {
   static String get communityStats => '$baseUrl/community/engagement/stats';
 
   // Manager - Collection Requests
-  static String get managerCollectionRequests => '$baseUrl/manager/collection-requests';
-  static String managerRequestDetail(String id) => '$baseUrl/manager/collection-requests/$id';
-  static String managerAssignDriver(String id) => '$baseUrl/manager/collection-requests/$id/assign-driver';
+  static String get managerDashboardStats => '$baseUrl/manager/dashboard-stats';
+  static String get managerCollectionRequests =>
+      '$baseUrl/manager/collection-requests';
+  static String managerRequestDetail(String id) =>
+      '$baseUrl/manager/collection-requests/$id';
+  static String managerAssignDriver(String id) =>
+      '$baseUrl/manager/collection-requests/$id/assign-driver';
 
   // Manager - Drivers
-  static String get managerAvailableDrivers => '$baseUrl/manager/drivers/available';
+  static String get managerAvailableDrivers =>
+      '$baseUrl/manager/drivers/available';
+  static String get managerRoutes => '$baseUrl/manager/routes';
+  static String managerRoute(String id) => '$baseUrl/manager/routes/$id';
+  static String managerRouteConfirm(String id) =>
+      '$baseUrl/manager/routes/$id/confirm-request';
+  static String managerRouteChangeDriver(String id) =>
+      '$baseUrl/manager/routes/$id/change-driver';
+  static String get managerRouteSuggestion =>
+      '$baseUrl/manager/routes/suggest-route';
+
+  // Driver fixed routes
+  static String get driverRoutes => '$baseUrl/driver/routes';
 }

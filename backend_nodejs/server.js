@@ -20,7 +20,9 @@ const announcementRoutes = require('./src/routes/announcementRoutes');
 const communityReportRoutes = require('./src/routes/communityReportRoutes');
 const engagementRoutes = require('./src/routes/engagementRoutes');
 const managerRoutes = require('./src/routes/managerRoutes');
+const routeRoutes = require('./src/routes/route.routes');
 const collectionRequestRoutes = require('./src/routes/collectionRequestRoutes');
+const driverRoutes = require('./src/routes/driverRoutes');
 
 
 const app = express();
@@ -78,6 +80,8 @@ app.use('/api/community/engagement', engagementRoutes);
 
 app.use('/api/collection-requests', collectionRequestRoutes);
 app.use('/api/manager', managerRoutes);
+app.use('/api/manager/routes', routeRoutes);
+app.use('/api/driver', driverRoutes);
 
 
 // =====================================================

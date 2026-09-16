@@ -10,7 +10,7 @@ import 'widgets/metric_summary_card.dart';
 import 'widgets/next_pickup_card.dart';
 import 'widgets/route_progress_card.dart';
 
-import '../profile/profile_screen.dart'; 
+import '../profile/profile_screen.dart';
 
 class DriverDashboard extends StatefulWidget {
   const DriverDashboard({super.key});
@@ -39,7 +39,7 @@ class _DriverDashboardState extends State<DriverDashboard> {
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
         // Using a green tint to match the driver theme, similar to the manager's purple tint
-        indicatorColor: const Color(0xFFE8F5E9), 
+        indicatorColor: const Color(0xFFE8F5E9),
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.dashboard_outlined),
@@ -74,9 +74,11 @@ class _DriverHomeState extends State<_DriverHome> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) => context.read<DriverProvider>().fetchDashboardData(),
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final provider = context.read<DriverProvider>();
+      await provider.fetchDashboardData();
+      await provider.fetchAssignedRoutes();
+    });
   }
 
   @override
@@ -90,8 +92,10 @@ class _DriverHomeState extends State<_DriverHome> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF2E7D32),
         foregroundColor: Colors.white,
-        title: const Text('EcoTrack',
-            style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'EcoTrack',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
@@ -103,11 +107,13 @@ class _DriverHomeState extends State<_DriverHome> {
                   content: const Text('Are you sure you want to logout?'),
                   actions: [
                     TextButton(
-                        onPressed: () => Navigator.pop(ctx, false),
-                        child: const Text('Cancel')),
+                      onPressed: () => Navigator.pop(ctx, false),
+                      child: const Text('Cancel'),
+                    ),
                     ElevatedButton(
-                        onPressed: () => Navigator.pop(ctx, true),
-                        child: const Text('Logout')),
+                      onPressed: () => Navigator.pop(ctx, true),
+                      child: const Text('Logout'),
+                    ),
                   ],
                 ),
               );
@@ -115,7 +121,10 @@ class _DriverHomeState extends State<_DriverHome> {
                 await context.read<AuthProvider>().logout();
                 if (context.mounted) {
                   Navigator.pushNamedAndRemoveUntil(
-                      context, '/login', (r) => false);
+                    context,
+                    '/login',
+                    (r) => false,
+                  );
                 }
               }
             },
@@ -191,6 +200,14 @@ class _DriverHomeState extends State<_DriverHome> {
                     const SizedBox(height: 20),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: _AssignedRoutesCard(
+                        routes: driverProvider.assignedRoutes,
+                        isLoading: driverProvider.isRoutesLoading,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: NextPickupCard(
                         pickup: driverProvider.nextPickup,
                         onViewPickup: _showPickupDetails,
@@ -218,9 +235,9 @@ class _DriverHomeState extends State<_DriverHome> {
   }
 
   void _openSchedule() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const TodayScheduleScreen()),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const TodayScheduleScreen()));
   }
 
   Future<void> _toggleAvailability() async {
@@ -284,5 +301,53 @@ class _DriverHomeState extends State<_DriverHome> {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(content: Text(message)));
+  }
+}
+
+class _AssignedRoutesCard extends StatelessWidget {
+  final List<Map<String, dynamic>> routes;
+  final bool isLoading;
+
+  const _AssignedRoutesCard({required this.routes, required this.isLoading});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: EdgeInsets.zero,
+      elevation: 0,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Assigned Fixed Routes',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            if (isLoading)
+              const Center(child: CircularProgressIndicator())
+            else if (routes.isEmpty)
+              const Text('No fixed routes assigned yet.')
+            else
+              ...routes.map((route) {
+                final stops = route['stops'] as List? ?? const [];
+                return ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(
+                    Icons.alt_route,
+                    color: Color(0xFF2E7D32),
+                  ),
+                  title: Text(route['routeName']?.toString() ?? 'Route'),
+                  subtitle: Text(
+                    '${route['zone'] ?? 'Assigned area'} • ${stops.length} stops',
+                  ),
+                  trailing: Text(route['status']?.toString() ?? ''),
+                );
+              }),
+          ],
+        ),
+      ),
+    );
   }
 }

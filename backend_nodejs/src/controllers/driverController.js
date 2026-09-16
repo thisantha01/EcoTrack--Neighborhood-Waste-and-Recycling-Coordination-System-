@@ -1,5 +1,39 @@
 const Pickup = require('../models/pickup');
 const User = require('../models/User'); // Adjust path to your User model if needed
+const Route = require('../models/Route');
+
+/**
+ * @desc    Get fixed routes and collection requests assigned to the driver
+ * @route   GET /api/driver/routes
+ * @access  Private (Driver only)
+ */
+exports.getAssignedRoutes = async (req, res) => {
+  try {
+    const routes = await Route.find({
+      assignedDriver: req.user._id,
+      $or: [
+        { routeStatus: 'Active' },
+        { status: { $in: ['Active', 'assigned', 'in-progress'] } },
+      ],
+    })
+      .sort({ date: 1 })
+      .populate({
+        path: 'routeStops.collectionRequestId',
+        populate: { path: 'requester', select: 'name phone' },
+      });
+
+    return res.status(200).json({
+      success: true,
+      routes,
+    });
+  } catch (error) {
+    console.error('Get assigned routes error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Unable to fetch assigned routes',
+    });
+  }
+};
 
 /**
  * @desc    Get dashboard overview metrics and next scheduled pickup

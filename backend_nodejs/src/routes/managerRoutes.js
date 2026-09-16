@@ -1,6 +1,7 @@
 const express = require('express');
 const { protect, authorizeRoles } = require('../middleware/authMiddleware');
 const {
+  getDashboardStats,
   getCollectionRequests,
   getRequestDetails,
   getAvailableDrivers,
@@ -11,6 +12,9 @@ const router = express.Router();
 
 // All routes require authentication and recycling_manager role
 router.use(protect, authorizeRoles('recycling_manager'));
+
+// Dashboard statistics
+router.get('/dashboard-stats', getDashboardStats);
 
 // View collection requests (with filtering)
 router.get('/collection-requests', getCollectionRequests);

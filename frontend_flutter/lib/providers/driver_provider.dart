@@ -14,6 +14,8 @@ class DriverProvider with ChangeNotifier {
   int _remainingPickups = 0;
   PickupModel? _nextPickup;
   List<PickupModel> _scheduleList = [];
+  List<Map<String, dynamic>> _assignedRoutes = [];
+  bool _isRoutesLoading = false;
 
   bool get isDashboardLoading => _isDashboardLoading;
   bool get isScheduleLoading => _isScheduleLoading;
@@ -24,6 +26,22 @@ class DriverProvider with ChangeNotifier {
   int get remainingPickups => _remainingPickups;
   PickupModel? get nextPickup => _nextPickup;
   List<PickupModel> get scheduleList => List.unmodifiable(_scheduleList);
+  List<Map<String, dynamic>> get assignedRoutes =>
+      List.unmodifiable(_assignedRoutes);
+  bool get isRoutesLoading => _isRoutesLoading;
+
+  Future<void> fetchAssignedRoutes() async {
+    _isRoutesLoading = true;
+    notifyListeners();
+    try {
+      _assignedRoutes = await _driverService.getAssignedRoutes();
+    } catch (e) {
+      debugPrint('DriverProvider.fetchAssignedRoutes error: $e');
+    } finally {
+      _isRoutesLoading = false;
+      notifyListeners();
+    }
+  }
 
   Future<void> fetchDashboardData() async {
     _isDashboardLoading = true;
@@ -38,7 +56,9 @@ class DriverProvider with ChangeNotifier {
 
       final nextPickup = res['nextPickup'];
       if (nextPickup is Map) {
-        _nextPickup = PickupModel.fromJson(Map<String, dynamic>.from(nextPickup));
+        _nextPickup = PickupModel.fromJson(
+          Map<String, dynamic>.from(nextPickup),
+        );
       } else {
         await fetchTodaySchedule(silent: true);
         _calculateStatsFromSchedule();
@@ -63,7 +83,8 @@ class DriverProvider with ChangeNotifier {
       _calculateStatsFromSchedule();
     } catch (e) {
       debugPrint('DriverProvider.fetchTodaySchedule error: $e');
-      _errorMessage = 'Unable to load today\'s schedule. Pull down to try again.';
+      _errorMessage =
+          'Unable to load today\'s schedule. Pull down to try again.';
     } finally {
       if (!silent) {
         _isScheduleLoading = false;
@@ -74,7 +95,9 @@ class DriverProvider with ChangeNotifier {
 
   void _calculateStatsFromSchedule() {
     _totalPickups = _scheduleList.length;
-    _completedPickups = _scheduleList.where((p) => p.status == 'completed').length;
+    _completedPickups = _scheduleList
+        .where((p) => p.status == 'completed')
+        .length;
     _remainingPickups = _totalPickups - _completedPickups;
     if (_scheduleList.isEmpty) {
       _nextPickup = null;
@@ -99,7 +122,8 @@ class DriverProvider with ChangeNotifier {
     return wasUpdated;
   }
 
-  Future<bool> startPickup(String pickupId) => updatePickupStatus(pickupId, 'accepted');
+  Future<bool> startPickup(String pickupId) =>
+      _updatePickupStatus(pickupId, 'accepted');
 
   Future<bool> completePickup(String pickupId) =>
       updatePickupStatus(pickupId, 'completed');

@@ -4,6 +4,103 @@ const User = require('../models/User');
 
 
 // =====================================================
+// GET DASHBOARD STATS
+// =====================================================
+
+const getDashboardStats = async (req, res) => {
+  try {
+    const now = new Date();
+    const startOfToday = new Date(now);
+    startOfToday.setHours(0, 0, 0, 0);
+
+    const startOfWeek = new Date(startOfToday);
+    const dayOfWeek = startOfWeek.getDay();
+    const daysSinceMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    startOfWeek.setDate(startOfWeek.getDate() - daysSinceMonday);
+
+    const startOfMonth = new Date(
+      startOfToday.getFullYear(),
+      startOfToday.getMonth(),
+      1
+    );
+
+    const [requestStats, driverStats, busyDriverStats] = await Promise.all([
+      CollectionRequest.aggregate([
+        {
+          $facet: {
+            totals: [
+              {
+                $group: {
+                  _id: null,
+                  totalCollectionRequests: { $sum: 1 },
+                  pendingRequests: {
+                    $sum: { $cond: [{ $eq: ['$status', 'requested'] }, 1, 0] },
+                  },
+                  acceptedRequests: {
+                    $sum: { $cond: [{ $eq: ['$status', 'accepted'] }, 1, 0] },
+                  },
+                  completedRequests: {
+                    $sum: { $cond: [{ $eq: ['$status', 'collected'] }, 1, 0] },
+                  },
+                },
+              },
+            ],
+            today: [
+              { $match: { createdAt: { $gte: startOfToday } } },
+              { $count: 'count' },
+            ],
+            weekly: [
+              { $match: { createdAt: { $gte: startOfWeek } } },
+              { $count: 'count' },
+            ],
+            monthly: [
+              { $match: { createdAt: { $gte: startOfMonth } } },
+              { $count: 'count' },
+            ],
+          },
+        },
+      ]),
+      User.aggregate([
+        { $match: { role: 'driver', isVerified: true } },
+        { $count: 'count' },
+      ]),
+      DriverAssignment.aggregate([
+        {
+          $match: {
+            status: { $in: ['Assigned', 'Accepted'] },
+          },
+        },
+        { $group: { _id: '$driverId' } },
+        { $count: 'count' },
+      ]),
+    ]);
+
+    const requestFacet = requestStats[0] || {};
+    const totals = requestFacet.totals?.[0] || {};
+
+    return res.status(200).json({
+      success: true,
+      totalCollectionRequests: totals.totalCollectionRequests || 0,
+      pendingRequests: totals.pendingRequests || 0,
+      acceptedRequests: totals.acceptedRequests || 0,
+      completedRequests: totals.completedRequests || 0,
+      totalDriversCount: driverStats[0]?.count || 0,
+      busyDriversCount: busyDriverStats[0]?.count || 0,
+      todayRequestsCount: requestFacet.today?.[0]?.count || 0,
+      weeklyRequestsCount: requestFacet.weekly?.[0]?.count || 0,
+      monthlyRequestsCount: requestFacet.monthly?.[0]?.count || 0,
+    });
+  } catch (error) {
+    console.error('Get dashboard stats error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Unable to fetch dashboard statistics',
+    });
+  }
+};
+
+
+// =====================================================
 // GET COLLECTION REQUESTS (with filtering)
 // =====================================================
 
@@ -126,7 +223,7 @@ const getAvailableDrivers = async (req, res) => {
     const drivers = await User.find({
       role: 'driver',
       isVerified: true,
-    }).select('name phone vehicleType licenseNumber location coordinates');
+    }).select('name phone vehicleType licenseNumber location locationCoordinates');
 
     const driverIds = drivers.map((d) => d._id);
 
@@ -168,7 +265,7 @@ const getAvailableDrivers = async (req, res) => {
         vehicleType: driver.vehicleType,
         licenseNumber: driver.licenseNumber,
         location: driver.location,
-        coordinates: driver.coordinates,
+        coordinates: driver.locationCoordinates,
         availability: assignmentInfo.activeCount === 0 ? 'available' : 'busy',
         currentAssignedPickups: assignmentInfo.activeCount,
       };
@@ -323,6 +420,7 @@ const assignDriver = async (req, res) => {
 // =====================================================
 
 module.exports = {
+  getDashboardStats,
   getCollectionRequests,
   getRequestDetails,
   getAvailableDrivers,
