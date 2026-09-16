@@ -26,7 +26,7 @@ class DriverService {
         '${ApiConfig.baseUrl}/driver/schedule/today',
         authenticated: true,
       );
-      final data = response['data'] ?? response['schedule'] ?? response['pickups'];
+        final data = response['data'] ?? response['schedule'] ?? response['pickups'];
       if (data is List) {
         return data
             .whereType<Map>()

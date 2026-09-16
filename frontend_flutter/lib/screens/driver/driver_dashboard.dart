@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../models/pickup_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/driver_provider.dart';
+import 'assign_pickup_screen.dart';
 import 'today_schedule_screen.dart';
 import 'widgets/driver_header.dart';
 import 'widgets/metric_summary_card.dart';
@@ -28,6 +29,7 @@ class _DriverDashboardState extends State<DriverDashboard> {
     final List<Widget> pages = [
       const _DriverHome(),
       const TodayScheduleScreen(),
+      const AssignPickupScreen(),
       const ProfileScreen(),
     ];
 
@@ -50,6 +52,11 @@ class _DriverDashboardState extends State<DriverDashboard> {
             icon: Icon(Icons.schedule_outlined),
             selectedIcon: Icon(Icons.schedule, color: Color(0xFF2E7D32)),
             label: 'Schedule',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.add_circle_outline),
+            selectedIcon: Icon(Icons.add_circle, color: Color(0xFF2E7D32)),
+            label: 'Assign',
           ),
           NavigationDestination(
             icon: Icon(Icons.person_outline),

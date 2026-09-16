@@ -63,7 +63,7 @@ class DriverProvider with ChangeNotifier {
       _calculateStatsFromSchedule();
     } catch (e) {
       debugPrint('DriverProvider.fetchTodaySchedule error: $e');
-      _errorMessage = 'Unable to load today\'s schedule. Pull down to try again.';
+        _errorMessage = 'Unable to load today\'s schedule. Pull down to try again.';
     } finally {
       if (!silent) {
         _isScheduleLoading = false;

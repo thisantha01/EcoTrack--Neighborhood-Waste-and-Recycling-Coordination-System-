@@ -88,6 +88,11 @@ const userSchema = new mongoose.Schema(
       default: false,
     },
 
+    isAvailable: {
+      type: Boolean,
+      default: true,
+    },
+
     otp: {
       type: String,
       default: null,

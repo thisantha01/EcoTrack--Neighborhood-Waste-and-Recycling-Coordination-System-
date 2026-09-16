@@ -1,4 +1,6 @@
 const Pickup = require('../models/pickup');
+const CollectionRequest = require('../models/CollectionRequest');
+const DriverAssignment = require('../models/DriverAssignment');
 const User = require('../models/User'); // Adjust path to your User model if needed
 
 /**
@@ -81,16 +83,25 @@ exports.getTodaySchedule = async (req, res) => {
   try {
     const driverId = req.user._id;
 
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
+      const requests = await CollectionRequest.find({
+        assignedDriver: driverId,
+        status: { $ne: 'cancelled' },
+      })
+        .sort({ preferredDate: 1, createdAt: 1 })
+        .populate('requester', 'name phone');
 
-    const endOfDay = new Date();
-    endOfDay.setHours(23, 59, 59, 999);
-
-    const pickups = await Pickup.find({
-      driverId,
-      createdAt: { $gte: startOfDay, $lte: endOfDay },
-    }).sort({ createdAt: 1 });
+      const pickups = requests.map((request) => ({
+        _id: request._id,
+        pickupNumber: `REQ-${request._id.toString().slice(-6).toUpperCase()}`,
+        customerName: request.requester?.name || 'Collection requester',
+        customerPhone: request.requester?.phone,
+        address: request.location,
+        wasteType: request.wasteType,
+        weightKg: request.estimatedQuantity,
+        scheduledTime: request.preferredTime || request.preferredDate?.toISOString() || 'Not scheduled',
+        status: request.status === 'collected' ? 'completed' : request.status,
+        notes: request.description,
+      }));
 
     res.status(200).json({
       success: true,
@@ -108,21 +119,28 @@ exports.getTodaySchedule = async (req, res) => {
 };
 
 /**
- * @desc    Toggle driver online/offline availability status
+ * @desc    Update driver online/offline availability status
  * @route   PATCH /api/driver/availability
  * @access  Private (Driver only)
  */
 exports.updateAvailability = async (req, res) => {
   try {
     const driverId = req.user._id;
+    const { isAvailable } = req.body;
+
+    if (typeof isAvailable !== 'boolean') {
+      return res.status(400).json({
+        success: false,
+        message: 'isAvailable must be a boolean',
+      });
+    }
 
     const driver = await User.findById(driverId);
     if (!driver) {
       return res.status(404).json({ message: 'Driver not found' });
     }
 
-    // Toggle current availability state
-    driver.isAvailable = !driver.isAvailable;
+    driver.isAvailable = isAvailable;
     await driver.save();
 
     res.status(200).json({
@@ -151,11 +169,40 @@ exports.updatePickupStatus = async (req, res) => {
     const { status } = req.body;
     const driverId = req.user._id;
 
-    const validStatuses = ['scheduled', 'accepted','en_route', 'completed', 'cancelled'];
+    const validStatuses = ['scheduled', 'accepted', 'en_route', 'arrived', 'completed', 'cancelled'];
     if (!status || !validStatuses.includes(status)) {
       return res.status(400).json({
         success: false,
         message: 'Invalid status provided',
+      });
+    }
+
+    const request = await CollectionRequest.findOne({ _id: id, assignedDriver: driverId });
+    if (request) {
+      const requestStatus = status === 'completed' ? 'collected' : status;
+      request.status = requestStatus;
+      request.statusHistory.push({
+        status: requestStatus,
+        note: `Driver updated request status to ${status}`,
+      });
+      await request.save();
+
+      if (requestStatus === 'collected') {
+        await DriverAssignment.deleteOne({
+          requestId: request._id,
+          driverId,
+        });
+      } else {
+        await DriverAssignment.updateOne(
+          { requestId: request._id, driverId },
+          { $set: { status: 'Accepted' } },
+        );
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: `Pickup status updated to ${status}`,
+        pickup: request,
       });
     }
 

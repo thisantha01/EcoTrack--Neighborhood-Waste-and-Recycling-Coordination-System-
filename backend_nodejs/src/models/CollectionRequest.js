@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const statusHistorySchema = new mongoose.Schema({
   status: {
     type: String,
-    enum: ['requested', 'accepted', 'scheduled', 'collected', 'cancelled'],
+    enum: ['requested', 'accepted', 'scheduled', 'en_route', 'arrived', 'collected', 'cancelled'],
     required: true
   },
   timestamp: {
@@ -56,7 +56,7 @@ const collectionRequestSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['requested', 'accepted', 'scheduled', 'collected', 'cancelled'],
+      enum: ['requested', 'accepted', 'scheduled', 'en_route', 'arrived', 'collected', 'cancelled'],
     default: 'requested'
   },
   statusHistory: [statusHistorySchema],
