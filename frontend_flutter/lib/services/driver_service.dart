@@ -26,11 +26,14 @@ class DriverService {
         '${ApiConfig.baseUrl}/driver/schedule/today',
         authenticated: true,
       );
-      final data = response['data'] ?? response['schedule'] ?? response['pickups'];
+      final data =
+          response['data'] ?? response['schedule'] ?? response['pickups'];
       if (data is List) {
         return data
             .whereType<Map>()
-            .map((item) => PickupModel.fromJson(Map<String, dynamic>.from(item)))
+            .map(
+              (item) => PickupModel.fromJson(Map<String, dynamic>.from(item)),
+            )
             .toList();
       }
       return const [];
@@ -62,11 +65,9 @@ class DriverService {
 
   Future<bool> updateAvailability(bool isAvailable) async {
     try {
-      await _apiService.patch(
-        '${ApiConfig.baseUrl}/driver/availability',
-        {'isAvailable': isAvailable},
-        authenticated: true,
-      );
+      await _apiService.patch('${ApiConfig.baseUrl}/driver/availability', {
+        'isAvailable': isAvailable,
+      }, authenticated: true);
       return true;
     } catch (e) {
       debugPrint('DriverService.updateAvailability error: $e');

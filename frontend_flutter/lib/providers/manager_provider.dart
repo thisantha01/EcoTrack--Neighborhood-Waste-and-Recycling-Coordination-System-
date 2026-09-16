@@ -196,7 +196,9 @@ class ManagerProvider extends ChangeNotifier {
       final route = response['route'];
       if (route is Map) {
         final routeMap = Map<String, dynamic>.from(route);
-        final index = _routes.indexWhere((item) => item['_id']?.toString() == routeId);
+        final index = _routes.indexWhere(
+          (item) => item['_id']?.toString() == routeId,
+        );
         if (index == -1) {
           _routes = [routeMap, ..._routes];
         } else {

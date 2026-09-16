@@ -16,8 +16,7 @@ class RecyclingManagerDashboard extends StatefulWidget {
       _RecyclingManagerDashboardState();
 }
 
-class _RecyclingManagerDashboardState
-    extends State<RecyclingManagerDashboard> {
+class _RecyclingManagerDashboardState extends State<RecyclingManagerDashboard> {
   int _selectedIndex = 0;
 
   void _goToAssignRoute() => setState(() => _selectedIndex = 2);
@@ -38,10 +37,7 @@ class _RecyclingManagerDashboardState
     ];
 
     return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: pages,
-      ),
+      body: IndexedStack(index: _selectedIndex, children: pages),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
         onDestinationSelected: (i) => setState(() => _selectedIndex = i),
@@ -128,10 +124,14 @@ class _RecyclingManagerHomeState extends State<_RecyclingManagerHome> {
         title: const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('EcoTrack',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-            Text('Recycling center manager',
-                style: TextStyle(fontSize: 11, color: Colors.white70)),
+            Text(
+              'EcoTrack',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
+            Text(
+              'Recycling center manager',
+              style: TextStyle(fontSize: 11, color: Colors.white70),
+            ),
           ],
         ),
         actions: [
@@ -145,11 +145,13 @@ class _RecyclingManagerHomeState extends State<_RecyclingManagerHome> {
                   content: const Text('Are you sure you want to logout?'),
                   actions: [
                     TextButton(
-                        onPressed: () => Navigator.pop(ctx, false),
-                        child: const Text('Cancel')),
+                      onPressed: () => Navigator.pop(ctx, false),
+                      child: const Text('Cancel'),
+                    ),
                     ElevatedButton(
-                        onPressed: () => Navigator.pop(ctx, true),
-                        child: const Text('Logout')),
+                      onPressed: () => Navigator.pop(ctx, true),
+                      child: const Text('Logout'),
+                    ),
                   ],
                 ),
               );
@@ -157,7 +159,10 @@ class _RecyclingManagerHomeState extends State<_RecyclingManagerHome> {
                 await context.read<AuthProvider>().logout();
                 if (context.mounted) {
                   Navigator.pushNamedAndRemoveUntil(
-                      context, '/login', (r) => false);
+                    context,
+                    '/login',
+                    (r) => false,
+                  );
                 }
               }
             },
@@ -192,9 +197,13 @@ class _RecyclingManagerHomeState extends State<_RecyclingManagerHome> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('Welcome back,',
-                                style: TextStyle(
-                                    color: Colors.white70, fontSize: 12)),
+                            const Text(
+                              'Welcome back,',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 12,
+                              ),
+                            ),
                             Text(
                               user?.name ?? 'Recycling Manager',
                               style: const TextStyle(
@@ -209,7 +218,9 @@ class _RecyclingManagerHomeState extends State<_RecyclingManagerHome> {
                       ),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(12),
@@ -218,11 +229,17 @@ class _RecyclingManagerHomeState extends State<_RecyclingManagerHome> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             CircleAvatar(
-                                radius: 3, backgroundColor: Colors.greenAccent),
+                              radius: 3,
+                              backgroundColor: Colors.greenAccent,
+                            ),
                             SizedBox(width: 4),
-                            Text('Active',
-                                style: TextStyle(
-                                    color: Colors.white, fontSize: 10)),
+                            Text(
+                              'Active',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -235,16 +252,19 @@ class _RecyclingManagerHomeState extends State<_RecyclingManagerHome> {
                         child: ElevatedButton.icon(
                           onPressed: widget.onGoToCollectionRequests,
                           icon: const Icon(Icons.inbox, size: 16),
-                          label: const Text('View Requests',
-                              style: TextStyle(fontSize: 12),
-                              overflow: TextOverflow.ellipsis),
+                          label: const Text(
+                            'View Requests',
+                            style: TextStyle(fontSize: 12),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.white,
                             foregroundColor: const Color(0xFF6A1B9A),
                             elevation: 0,
                             padding: const EdgeInsets.symmetric(vertical: 10),
                             shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10)),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                           ),
                         ),
                       ),
@@ -252,16 +272,22 @@ class _RecyclingManagerHomeState extends State<_RecyclingManagerHome> {
                       Expanded(
                         child: OutlinedButton.icon(
                           onPressed: widget.onGoToAssignRoute,
-                          icon: const Icon(Icons.add_location_alt,
-                              color: Colors.white, size: 16),
-                          label: const Text('Assign Route',
-                              style: TextStyle(color: Colors.white, fontSize: 12),
-                              overflow: TextOverflow.ellipsis),
+                          icon: const Icon(
+                            Icons.add_location_alt,
+                            color: Colors.white,
+                            size: 16,
+                          ),
+                          label: const Text(
+                            'Assign Route',
+                            style: TextStyle(color: Colors.white, fontSize: 12),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                           style: OutlinedButton.styleFrom(
                             side: const BorderSide(color: Colors.white54),
                             padding: const EdgeInsets.symmetric(vertical: 10),
                             shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10)),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                           ),
                         ),
                       ),
@@ -272,8 +298,10 @@ class _RecyclingManagerHomeState extends State<_RecyclingManagerHome> {
             ),
 
             const SizedBox(height: 20),
-            const Text('Operations Overview',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            const Text(
+              'Operations Overview',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 12),
 
             // Fixed Height Stat Grid
@@ -292,7 +320,9 @@ class _RecyclingManagerHomeState extends State<_RecyclingManagerHome> {
                       : '${stats('acceptedRequests')} Total',
                   icon: Icons.alt_route,
                   color: const Color(0xFF1565C0),
-                  subtitle: isLoadingStats ? 'Loading...' : 'Ready for scheduling',
+                  subtitle: isLoadingStats
+                      ? 'Loading...'
+                      : 'Ready for scheduling',
                 ),
                 _statCard(
                   title: 'Completed Requests',
@@ -334,12 +364,16 @@ class _RecyclingManagerHomeState extends State<_RecyclingManagerHome> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Assigned Routes',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                const Text(
+                  'Assigned Routes',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
                 TextButton(
                   onPressed: widget.onGoToAssignRoute,
-                  child: const Text('Create New',
-                      style: TextStyle(color: Color(0xFF6A1B9A))),
+                  child: const Text(
+                    'Create New',
+                    style: TextStyle(color: Color(0xFF6A1B9A)),
+                  ),
                 ),
               ],
             ),
@@ -355,8 +389,10 @@ class _RecyclingManagerHomeState extends State<_RecyclingManagerHome> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Center(
-                      child: Text('No routes assigned yet.',
-                          style: TextStyle(color: Colors.grey)),
+                      child: Text(
+                        'No routes assigned yet.',
+                        style: TextStyle(color: Colors.grey),
+                      ),
                     ),
                   )
                 : ListView.builder(
@@ -370,8 +406,8 @@ class _RecyclingManagerHomeState extends State<_RecyclingManagerHome> {
                       final statusColor = status == 'completed'
                           ? Colors.green
                           : status == 'in-progress'
-                              ? Colors.orange
-                              : Colors.blue;
+                          ? Colors.orange
+                          : Colors.blue;
                       return Container(
                         margin: const EdgeInsets.only(bottom: 10),
                         padding: const EdgeInsets.all(12),
@@ -383,7 +419,9 @@ class _RecyclingManagerHomeState extends State<_RecyclingManagerHome> {
                         child: Row(
                           children: [
                             CircleAvatar(
-                              backgroundColor: statusColor.withValues(alpha: 0.1),
+                              backgroundColor: statusColor.withValues(
+                                alpha: 0.1,
+                              ),
                               child: Icon(
                                 Icons.alt_route,
                                 color: statusColor,
@@ -396,7 +434,8 @@ class _RecyclingManagerHomeState extends State<_RecyclingManagerHome> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    route['zone']?.toString() ?? 'Unassigned area',
+                                    route['zone']?.toString() ??
+                                        'Unassigned area',
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 13,
@@ -415,7 +454,9 @@ class _RecyclingManagerHomeState extends State<_RecyclingManagerHome> {
                             ),
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 4),
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
                                 color: statusColor.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(6),
@@ -472,12 +513,15 @@ class _RecyclingManagerHomeState extends State<_RecyclingManagerHome> {
             ],
           ),
           const SizedBox(height: 4),
-          Text(value,
-              style:
-                  const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+          Text(
+            value,
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 2),
-          Text(subtitle,
-              style: TextStyle(fontSize: 9, color: color.withValues(alpha: 0.8))),
+          Text(
+            subtitle,
+            style: TextStyle(fontSize: 9, color: color.withValues(alpha: 0.8)),
+          ),
         ],
       ),
     );

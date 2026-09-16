@@ -109,8 +109,10 @@ class _AssignRouteScreenState extends State<AssignRouteScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF7FBFB),
       appBar: AppBar(
-        title: const Text('Create & Assign Route',
-            style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Create & Assign Route',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         backgroundColor: const Color(0xFF0097A7),
         foregroundColor: Colors.white,
         centerTitle: true,
@@ -131,20 +133,27 @@ class _AssignRouteScreenState extends State<AssignRouteScreen> {
               _field(_zoneController, 'e.g. Nugegoda'),
               const SizedBox(height: 12),
               _label('Description'),
-              _field(_descriptionController, 'Regular collection route', maxLines: 2),
+              _field(
+                _descriptionController,
+                'Regular collection route',
+                maxLines: 2,
+              ),
               const SizedBox(height: 12),
               _label('Assigned driver'),
               DropdownButtonFormField<String>(
                 initialValue: _selectedDriverId,
                 decoration: _decoration(Icons.person, 'Choose a driver'),
-                items: provider.availableDrivers.map((driver) {
-                  final id = driver['driverId']?.toString();
-                  if (id == null) return null;
-                  return DropdownMenuItem<String>(
-                    value: id,
-                    child: Text(driver['name']?.toString() ?? 'Driver'),
-                  );
-                }).whereType<DropdownMenuItem<String>>().toList(),
+                items: provider.availableDrivers
+                    .map((driver) {
+                      final id = driver['driverId']?.toString();
+                      if (id == null) return null;
+                      return DropdownMenuItem<String>(
+                        value: id,
+                        child: Text(driver['name']?.toString() ?? 'Driver'),
+                      );
+                    })
+                    .whereType<DropdownMenuItem<String>>()
+                    .toList(),
                 onChanged: (value) => setState(() => _selectedDriverId = value),
               ),
               const SizedBox(height: 12),
@@ -186,7 +195,9 @@ class _AssignRouteScreenState extends State<AssignRouteScreen> {
                           height: 18,
                           width: 18,
                           child: CircularProgressIndicator(
-                              color: Colors.white, strokeWidth: 2),
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
                         )
                       : const Icon(Icons.alt_route),
                   label: Text(_isSubmitting ? 'Creating...' : 'Create Route'),
@@ -207,7 +218,9 @@ class _AssignRouteScreenState extends State<AssignRouteScreen> {
         value: selected,
         activeColor: const Color(0xFF0097A7),
         title: Text(request.location),
-        subtitle: Text('${request.wasteTypeLabel} • ${request.estimatedQuantity} kg'),
+        subtitle: Text(
+          '${request.wasteTypeLabel} • ${request.estimatedQuantity} kg',
+        ),
         onChanged: (value) {
           setState(() {
             if (value == true) {
@@ -222,12 +235,18 @@ class _AssignRouteScreenState extends State<AssignRouteScreen> {
   }
 
   Widget _label(String text) => Padding(
-        padding: const EdgeInsets.only(bottom: 6),
-        child: Text(text,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-      );
+    padding: const EdgeInsets.only(bottom: 6),
+    child: Text(
+      text,
+      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+    ),
+  );
 
-  Widget _field(TextEditingController controller, String hint, {int maxLines = 1}) {
+  Widget _field(
+    TextEditingController controller,
+    String hint, {
+    int maxLines = 1,
+  }) {
     return TextField(
       controller: controller,
       maxLines: maxLines,
@@ -236,12 +255,12 @@ class _AssignRouteScreenState extends State<AssignRouteScreen> {
   }
 
   InputDecoration _decoration(IconData? icon, String hint) => InputDecoration(
-        hintText: hint,
-        prefixIcon: icon == null
-            ? null
-            : Icon(icon, color: const Color(0xFF0097A7)),
-        filled: true,
-        fillColor: Colors.white,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-      );
+    hintText: hint,
+    prefixIcon: icon == null
+        ? null
+        : Icon(icon, color: const Color(0xFF0097A7)),
+    filled: true,
+    fillColor: Colors.white,
+    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+  );
 }

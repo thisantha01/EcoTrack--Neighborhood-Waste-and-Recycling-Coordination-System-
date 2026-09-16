@@ -34,19 +34,15 @@ class ManagerService {
     queryParams['page'] = page.toString();
     queryParams['limit'] = limit.toString();
 
-    final uri = Uri.parse(ApiConfig.managerCollectionRequests)
-        .replace(queryParameters: queryParams);
+    final uri = Uri.parse(
+      ApiConfig.managerCollectionRequests,
+    ).replace(queryParameters: queryParams);
 
-    return await _apiService.get(
-      uri.toString(),
-      authenticated: true,
-    );
+    return await _apiService.get(uri.toString(), authenticated: true);
   }
 
   /// Get single request details
-  Future<Map<String, dynamic>> getRequestDetails(
-    String requestId,
-  ) async {
+  Future<Map<String, dynamic>> getRequestDetails(String requestId) async {
     return await _apiService.get(
       ApiConfig.managerRequestDetail(requestId),
       authenticated: true,
@@ -66,28 +62,18 @@ class ManagerService {
     required String requestId,
     required String driverId,
   }) async {
-    return await _apiService.post(
-      ApiConfig.managerAssignDriver(requestId),
-      {
-        'driverId': driverId,
-      },
-      authenticated: true,
-    );
+    return await _apiService.post(ApiConfig.managerAssignDriver(requestId), {
+      'driverId': driverId,
+    }, authenticated: true);
   }
 
   /// Get fixed routes managed by the recycling manager
   Future<Map<String, dynamic>> getRoutes({int page = 1, int limit = 20}) async {
     final uri = Uri.parse(ApiConfig.managerRoutes).replace(
-      queryParameters: {
-        'page': page.toString(),
-        'limit': limit.toString(),
-      },
+      queryParameters: {'page': page.toString(), 'limit': limit.toString()},
     );
 
-    return await _apiService.get(
-      uri.toString(),
-      authenticated: true,
-    );
+    return await _apiService.get(uri.toString(), authenticated: true);
   }
 
   Future<Map<String, dynamic>> createRoute({
@@ -98,19 +84,15 @@ class ManagerService {
     String? assignedDriver,
     List<String> operatingDays = const [],
   }) async {
-    return await _apiService.post(
-      ApiConfig.managerRoutes,
-      {
-        'routeName': routeName,
-        'zone': zone,
-        'date': date.toIso8601String(),
-        'description': description ?? '',
-        'assignedDriver': assignedDriver,
-        'assignedLocations': [zone],
-        'operatingDays': operatingDays,
-      },
-      authenticated: true,
-    );
+    return await _apiService.post(ApiConfig.managerRoutes, {
+      'routeName': routeName,
+      'zone': zone,
+      'date': date.toIso8601String(),
+      'description': description ?? '',
+      'assignedDriver': assignedDriver,
+      'assignedLocations': [zone],
+      'operatingDays': operatingDays,
+    }, authenticated: true);
   }
 
   /// Confirm a collection request on a selected route
@@ -121,16 +103,12 @@ class ManagerService {
     required DateTime date,
     required String time,
   }) async {
-    return await _apiService.patch(
-      ApiConfig.managerRouteConfirm(routeId),
-      {
-        'collectionRequestId': collectionRequestId,
-        'assignedDriver': driverId,
-        'scheduledDate': date.toIso8601String(),
-        'scheduledTime': time,
-      },
-      authenticated: true,
-    );
+    return await _apiService.patch(ApiConfig.managerRouteConfirm(routeId), {
+      'collectionRequestId': collectionRequestId,
+      'assignedDriver': driverId,
+      'scheduledDate': date.toIso8601String(),
+      'scheduledTime': time,
+    }, authenticated: true);
   }
 
   Future<Map<String, dynamic>> changeRouteDriver({
@@ -148,9 +126,9 @@ class ManagerService {
     required double lat,
     required double lng,
   }) async {
-    final uri = Uri.parse(ApiConfig.managerRouteSuggestion).replace(
-      queryParameters: {'lat': lat.toString(), 'lng': lng.toString()},
-    );
+    final uri = Uri.parse(
+      ApiConfig.managerRouteSuggestion,
+    ).replace(queryParameters: {'lat': lat.toString(), 'lng': lng.toString()});
     return await _apiService.get(uri.toString(), authenticated: true);
   }
 }

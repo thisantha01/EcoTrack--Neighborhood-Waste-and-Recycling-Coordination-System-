@@ -87,7 +87,9 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
           }
 
           final statusColor = CollectionRequest.getStatusColor(request.status);
-            final createdStr = DateFormat('MMM d, yyyy • h:mm a').format(request.createdAt);
+          final createdStr = DateFormat(
+            'MMM d, yyyy • h:mm a',
+          ).format(request.createdAt);
           final pickupDateStr = request.preferredDate != null
               ? DateFormat('EEEE, MMM d, yyyy').format(request.preferredDate!)
               : 'Not set';
@@ -331,7 +333,9 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                         Icons.history,
                         entry.status[0].toUpperCase() +
                             entry.status.substring(1),
-                        DateFormat('MMM d, yyyy • h:mm a').format(entry.timestamp),
+                        DateFormat(
+                          'MMM d, yyyy • h:mm a',
+                        ).format(entry.timestamp),
                       );
                     }).toList(),
                   ),
@@ -363,7 +367,8 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                         onPressed: () => Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => ManagerRequestMapScreen(request: request),
+                            builder: (_) =>
+                                ManagerRequestMapScreen(request: request),
                           ),
                         ),
                         icon: const Icon(Icons.map_outlined),
@@ -378,12 +383,19 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                           foregroundColor: Colors.white,
                         ),
                         onPressed: request.status == 'requested'
-                            ? () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => ManagerAssignmentScreen(request: request),
-                                  ),
-                                ).then((_) => provider.fetchRequestDetail(widget.requestId))
+                            ? () =>
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => ManagerAssignmentScreen(
+                                        request: request,
+                                      ),
+                                    ),
+                                  ).then(
+                                    (_) => provider.fetchRequestDetail(
+                                      widget.requestId,
+                                    ),
+                                  )
                             : null,
                         icon: const Icon(Icons.assignment_turned_in),
                         label: const Text('Assign Collection'),

@@ -12,7 +12,8 @@ class ManagerRequestMapScreen extends StatefulWidget {
   const ManagerRequestMapScreen({super.key, required this.request});
 
   @override
-  State<ManagerRequestMapScreen> createState() => _ManagerRequestMapScreenState();
+  State<ManagerRequestMapScreen> createState() =>
+      _ManagerRequestMapScreenState();
 }
 
 class _ManagerRequestMapScreenState extends State<ManagerRequestMapScreen> {
@@ -27,7 +28,10 @@ class _ManagerRequestMapScreenState extends State<ManagerRequestMapScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final requestPoint = LatLng(widget.request.lat ?? 6.9271, widget.request.lng ?? 79.8612);
+    final requestPoint = LatLng(
+      widget.request.lat ?? 6.9271,
+      widget.request.lng ?? 79.8612,
+    );
     return Scaffold(
       appBar: AppBar(
         title: const Text('Collection Map'),
@@ -37,47 +41,86 @@ class _ManagerRequestMapScreenState extends State<ManagerRequestMapScreen> {
       body: Consumer<ManagerProvider>(
         builder: (context, provider, child) {
           final markers = <Marker>[
-            Marker(point: requestPoint, width: 42, height: 42, child: const Icon(Icons.location_pin, color: Colors.red, size: 42)),
+            Marker(
+              point: requestPoint,
+              width: 42,
+              height: 42,
+              child: const Icon(
+                Icons.location_pin,
+                color: Colors.red,
+                size: 42,
+              ),
+            ),
           ];
           for (final route in provider.routes) {
             final coords = route['areaCoordinates'];
             if (coords is Map && coords['lat'] is num && coords['lng'] is num) {
-              markers.add(Marker(
-                point: LatLng((coords['lat'] as num).toDouble(), (coords['lng'] as num).toDouble()),
-                width: 36,
-                height: 36,
-                child: GestureDetector(
-                  onTap: () => _showRoute(route),
-                  child: const Icon(Icons.alt_route, color: Color(0xFF0097A7), size: 32),
+              markers.add(
+                Marker(
+                  point: LatLng(
+                    (coords['lat'] as num).toDouble(),
+                    (coords['lng'] as num).toDouble(),
+                  ),
+                  width: 36,
+                  height: 36,
+                  child: GestureDetector(
+                    onTap: () => _showRoute(route),
+                    child: const Icon(
+                      Icons.alt_route,
+                      color: Color(0xFF0097A7),
+                      size: 32,
+                    ),
+                  ),
                 ),
-              ));
+              );
             }
           }
-          return Stack(children: [
-            FlutterMap(
-              options: MapOptions(initialCenter: requestPoint, initialZoom: 12),
-              children: [
-                TileLayer(urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', userAgentPackageName: 'com.ecotrack.app'),
-                MarkerLayer(markers: markers),
-              ],
-            ),
-            Positioned(
-              left: 12,
-              right: 12,
-              bottom: 16,
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(14),
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    const Text('Selected request', style: TextStyle(fontWeight: FontWeight.bold)),
-                    Text(widget.request.location),
-                    const SizedBox(height: 6),
-                    Text('Tap a route marker to review its driver and stops.', style: TextStyle(color: Colors.grey.shade700, fontSize: 12)),
-                  ]),
+          return Stack(
+            children: [
+              FlutterMap(
+                options: MapOptions(
+                  initialCenter: requestPoint,
+                  initialZoom: 12,
+                ),
+                children: [
+                  TileLayer(
+                    urlTemplate:
+                        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    userAgentPackageName: 'com.ecotrack.app',
+                  ),
+                  MarkerLayer(markers: markers),
+                ],
+              ),
+              Positioned(
+                left: 12,
+                right: 12,
+                bottom: 16,
+                child: Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Selected request',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        Text(widget.request.location),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Tap a route marker to review its driver and stops.',
+                          style: TextStyle(
+                            color: Colors.grey.shade700,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ]);
+            ],
+          );
         },
       ),
     );
@@ -90,14 +133,23 @@ class _ManagerRequestMapScreenState extends State<ManagerRequestMapScreen> {
       context: context,
       builder: (context) => Padding(
         padding: const EdgeInsets.all(20),
-        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(route['routeName']?.toString() ?? 'Route', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          Text(route['zone']?.toString() ?? ''),
-          const SizedBox(height: 10),
-          Text('Driver: ${driver is Map ? driver['name'] ?? 'Unassigned' : 'Unassigned'}'),
-          Text('Stops: ${stops.length}'),
-          Text('Status: ${route['status'] ?? 'draft'}'),
-        ]),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              route['routeName']?.toString() ?? 'Route',
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            Text(route['zone']?.toString() ?? ''),
+            const SizedBox(height: 10),
+            Text(
+              'Driver: ${driver is Map ? driver['name'] ?? 'Unassigned' : 'Unassigned'}',
+            ),
+            Text('Stops: ${stops.length}'),
+            Text('Status: ${route['status'] ?? 'draft'}'),
+          ],
+        ),
       ),
     );
   }
