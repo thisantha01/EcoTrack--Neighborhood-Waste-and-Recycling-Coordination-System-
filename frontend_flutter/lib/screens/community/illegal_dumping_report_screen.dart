@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart';
 import '../../services/community_report_service.dart';
@@ -47,6 +48,165 @@ class _IllegalDumpingReportScreenState
     }
   }
 
+  // ── Location chooser dialog ─────────────────────────
+  Future<void> _onLocationTap() async {
+    if (!mounted) return;
+
+    final choice = await showModalBottomSheet<String>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 18),
+              const Text(
+                'How would you like to set the location?',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'Provide a precise location so collection teams can find the site easily.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 13, color: Colors.grey),
+              ),
+              const SizedBox(height: 20),
+
+              // Option 1: Current location
+              ListTile(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                tileColor: const Color(0xFFE8F5E9),
+                leading: const CircleAvatar(
+                  backgroundColor: Color(0xFF2E7D32),
+                  child: Icon(Icons.my_location, color: Colors.white, size: 20),
+                ),
+                title: const Text('Use Current Location',
+                    style: TextStyle(fontWeight: FontWeight.w600)),
+                subtitle: const Text('Auto-detect via GPS',
+                    style: TextStyle(fontSize: 12)),
+                onTap: () => Navigator.pop(ctx, 'current'),
+              ),
+              const SizedBox(height: 10),
+
+              // Option 2: Pick on map
+              ListTile(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                tileColor: const Color(0xFFFBE9E7),
+                leading: const CircleAvatar(
+                  backgroundColor: Color(0xFFD32F2F),
+                  child: Icon(Icons.map_outlined, color: Colors.white, size: 20),
+                ),
+                title: const Text('Pick on Map',
+                    style: TextStyle(fontWeight: FontWeight.w600)),
+                subtitle: const Text('Tap to drop a pin manually',
+                    style: TextStyle(fontSize: 12)),
+                onTap: () => Navigator.pop(ctx, 'map'),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (choice == 'current') {
+      await _getCurrentLocation();
+    } else if (choice == 'map') {
+      await _openMapPicker();
+    }
+  }
+
+  // ── Get device GPS location ──────────────────────────
+  Future<void> _getCurrentLocation() async {
+    try {
+      // Check if location services are enabled
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Location services are disabled. Please enable them in settings.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
+
+      // Check and request permission
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Location permission denied. You can pick on the map instead.'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+          return;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Location permission permanently denied. Please enable it in app settings.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
+
+      // Get current position
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 10),
+        ),
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _pickedLat = position.latitude;
+        _pickedLng = position.longitude;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('✅ Current location captured'),
+          backgroundColor: Color(0xFF2E7D32),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Unable to get location: ${e.toString().replaceFirst('Exception: ', '')}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  // ── Open map picker screen ──────────────────────────
   Future<void> _openMapPicker() async {
     final result = await Navigator.push<PickedLocation>(
       context,
@@ -239,16 +399,16 @@ class _IllegalDumpingReportScreenState
 
               const SizedBox(height: 10),
 
-              // Pick on Map button
+              // Location chooser button
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
-                  onPressed: _openMapPicker,
-                  icon: const Icon(Icons.map_outlined, size: 20),
+                  onPressed: _onLocationTap,
+                  icon: const Icon(Icons.add_location_alt_outlined, size: 20),
                   label: Text(
                     _pickedLat != null
-                        ? 'Change Map Location ✓'
-                        : 'Pick Precise Location on Map',
+                        ? 'Change Location ✓'
+                        : 'Add Precise Location',
                     style: const TextStyle(fontSize: 14),
                   ),
                   style: OutlinedButton.styleFrom(
