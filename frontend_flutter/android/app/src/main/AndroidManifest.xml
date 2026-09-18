@@ -2,6 +2,10 @@
     <!-- Network permission - required for all HTTP calls -->
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- Location permissions - required for current location feature -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
     <application
         android:label="ecotrack"
         android:name="${applicationName}"

@@ -40,6 +40,9 @@ dependencies:
   # Lat/Lng
   latlong2: ^0.9.1
 
+  # Device location (GPS)
+  geolocator: ^14.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
