@@ -1,10 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:latlong2/latlong.dart';
 import '../../services/community_report_service.dart';
-import 'map_location_picker_screen.dart';
 
 class IllegalDumpingReportScreen extends StatefulWidget {
   const IllegalDumpingReportScreen({super.key});
@@ -23,8 +20,6 @@ class _IllegalDumpingReportScreenState
   String _type = 'illegal_dumping';
   Uint8List? _imageBytes;
   String? _imageUrl;
-  double? _pickedLat;
-  double? _pickedLng;
   bool _submitting = false;
 
   @override
@@ -47,30 +42,6 @@ class _IllegalDumpingReportScreenState
     }
   }
 
-  Future<void> _openMapPicker() async {
-    final result = await Navigator.push<PickedLocation>(
-      context,
-      MaterialPageRoute(
-        builder: (_) => MapLocationPickerScreen(
-          initialPosition: _pickedLat != null && _pickedLng != null
-              ? LatLng(_pickedLat!, _pickedLng!)
-              : null,
-          initialLabel: _locationCtrl.text,
-        ),
-      ),
-    );
-    if (result != null) {
-      setState(() {
-        _pickedLat = result.lat;
-        _pickedLng = result.lng;
-        // Auto-fill the location text field with the label if provided
-        if (result.label != null && result.label!.isNotEmpty) {
-          _locationCtrl.text = result.label!;
-        }
-      });
-    }
-  }
-
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -82,9 +53,6 @@ class _IllegalDumpingReportScreenState
         location: _locationCtrl.text.trim(),
         type: _type,
         imageUrl: _imageUrl,
-        coordinates: _pickedLat != null && _pickedLng != null
-            ? {'lat': _pickedLat!, 'lng': _pickedLng!}
-            : null,
       );
 
       if (mounted) {
@@ -237,78 +205,6 @@ class _IllegalDumpingReportScreenState
                 validator: (v) =>
                     v == null || v.trim().isEmpty ? 'Location is required' : null,
               ),
-
-              const SizedBox(height: 10),
-
-              // Pick on Map button
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: _openMapPicker,
-                  icon: const Icon(Icons.map_outlined, size: 20),
-                  label: Text(
-                    _pickedLat != null ? 'Change Map Location ✓' : 'Pick Precise Location on Map',
-                    style: const TextStyle(fontSize: 14),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFFD32F2F),
-                    side: const BorderSide(color: Color(0xFFD32F2F)),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ),
-
-              // Small map preview when coordinates are selected
-              if (_pickedLat != null && _pickedLng != null) ...[
-                const SizedBox(height: 10),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: SizedBox(
-                    height: 150,
-                    width: double.infinity,
-                    child: IgnorePointer(
-                      child: FlutterMap(
-                        options: MapOptions(
-                          initialCenter: LatLng(_pickedLat!, _pickedLng!),
-                          initialZoom: 16,
-                          interactionOptions: const InteractionOptions(
-                            flags: InteractiveFlag.none,
-                          ),
-                        ),
-                        children: [
-                          TileLayer(
-                            urlTemplate:
-                                'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                            userAgentPackageName: 'com.ecotrack.app',
-                          ),
-                          MarkerLayer(
-                            markers: [
-                              Marker(
-                                point: LatLng(_pickedLat!, _pickedLng!),
-                                width: 40,
-                                height: 40,
-                                child: const Icon(
-                                  Icons.location_pin,
-                                  color: Color(0xFFD32F2F),
-                                  size: 40,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '📍 ${_pickedLat!.toStringAsFixed(5)}, ${_pickedLng!.toStringAsFixed(5)}',
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-              ],
 
               const SizedBox(height: 20),
 
