@@ -96,7 +96,8 @@ const createReport = async (req, res) => {
       coordinates: coordinates || {},
       imageUrl: imageUrl || null,
       type: type || 'illegal_dumping',
-      statusHistory: [{ status: 'open', note: 'Report submitted' }],
+      status: 'in_progress',
+      statusHistory: [{ status: 'in_progress', note: 'Report submitted' }],
     });
 
     await report.populate('reporter', 'name profilePicture role');
