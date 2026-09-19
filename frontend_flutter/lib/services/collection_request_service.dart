@@ -19,6 +19,7 @@ class CollectionRequestService {
   // Create a new collection request
   static Future<CollectionRequest> createRequest({
     required String wasteType,
+    List<String>? wasteTypes,
     required double estimatedQuantity,
     String description = '',
     String? imageUrl,
@@ -34,6 +35,7 @@ class CollectionRequestService {
       headers: _headers(token!),
       body: jsonEncode({
         'wasteType': wasteType,
+        'wasteTypes': wasteTypes ?? [wasteType],
         'estimatedQuantity': estimatedQuantity,
         'description': description,
         'imageUrl': imageUrl,
