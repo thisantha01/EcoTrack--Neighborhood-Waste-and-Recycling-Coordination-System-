@@ -88,4 +88,25 @@ class DriverService {
       return false;
     }
   }
+
+  Future<Map<String, dynamic>> updateRouteStopStatus({
+    required String routeId,
+    required int stopIndex,
+    required String status,
+    String? reason,
+  }) async {
+    try {
+      return await _apiService.patch(
+        ApiConfig.managerRouteUpdateStopStatus(routeId, stopIndex),
+        {
+          'status': status,
+          'reason': ?reason,
+        },
+        authenticated: true,
+      );
+    } catch (e) {
+      debugPrint('DriverService.updateRouteStopStatus error: $e');
+      rethrow;
+    }
+  }
 }

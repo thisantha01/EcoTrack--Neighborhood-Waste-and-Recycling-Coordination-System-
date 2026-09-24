@@ -3,7 +3,7 @@ import 'recycling_manager_dashboard.dart';
 import 'assign_route_screen.dart';
 
 class ManagerMainScreen extends StatefulWidget {
-  const ManagerMainScreen({Key? key}) : super(key: key);
+  const ManagerMainScreen({super.key});
 
   @override
   State<ManagerMainScreen> createState() => _ManagerMainScreenState();
