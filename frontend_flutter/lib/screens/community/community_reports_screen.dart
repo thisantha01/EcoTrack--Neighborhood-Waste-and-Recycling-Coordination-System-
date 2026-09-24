@@ -5,6 +5,7 @@ import '../../models/community_report_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/community_report_service.dart';
 import 'illegal_dumping_report_screen.dart';
+import 'report_detail_screen.dart';
 
 class CommunityReportsScreen extends StatefulWidget {
   const CommunityReportsScreen({super.key});
@@ -135,6 +136,15 @@ class _CommunityReportsScreenState extends State<CommunityReportsScreen>
             } catch (_) {}
           },
           onAddInfo: () => _showAddInfoDialog(reports[i]),
+          onTap: () async {
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ReportDetailScreen(report: reports[i]),
+              ),
+            );
+            if (result == true) _load();
+          },
         ),
       ),
     );
@@ -191,12 +201,14 @@ class _ReportCard extends StatelessWidget {
   final String currentUserId;
   final VoidCallback onUpvote;
   final VoidCallback onAddInfo;
+  final VoidCallback onTap;
 
   const _ReportCard({
     required this.report,
     required this.currentUserId,
     required this.onUpvote,
     required this.onAddInfo,
+    required this.onTap,
   });
 
   @override
@@ -218,7 +230,9 @@ class _ReportCard extends StatelessWidget {
     };
     final color = typeColors[report.type] ?? Colors.grey;
 
-    return Card(
+    return GestureDetector(
+      onTap: onTap,
+      child: Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -338,6 +352,7 @@ class _ReportCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }

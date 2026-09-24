@@ -76,6 +76,32 @@ class CommunityReportService {
     );
   }
 
+  Future<CommunityReport> updateReport(
+    String reportId, {
+    String? title,
+    String? description,
+    String? location,
+    String? type,
+    Map<String, double>? coordinates,
+    String? imageUrl,
+  }) async {
+    final body = <String, dynamic>{};
+    if (title != null) body['title'] = title;
+    if (description != null) body['description'] = description;
+    if (location != null) body['location'] = location;
+    if (type != null) body['type'] = type;
+    if (coordinates != null) body['coordinates'] = coordinates;
+    if (imageUrl != null) body['imageUrl'] = imageUrl;
+
+    final response = await _api.put(
+      ApiConfig.communityReport(reportId),
+      body,
+      authenticated: true,
+    );
+    return CommunityReport.fromJson(
+        Map<String, dynamic>.from(response['report']));
+  }
+
   Future<void> updateStatus(String reportId, String status) async {
     await _api.put(
       ApiConfig.communityReportStatus(reportId),

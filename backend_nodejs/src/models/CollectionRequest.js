@@ -25,7 +25,18 @@ const collectionRequestSchema = new mongoose.Schema({
   wasteType: {
     type: String,
     enum: ['organic', 'plastic', 'paper', 'glass', 'metal', 'electronic', 'hazardous', 'other'],
-    required: [true, 'Waste type is required']
+    default: 'other',
+  },
+  wasteTypes: {
+    type: [String],
+    enum: ['organic', 'plastic', 'paper', 'glass', 'metal', 'electronic', 'hazardous', 'other'],
+    default: [],
+    validate: {
+      validator: function(v) {
+        return v.length > 0;
+      },
+      message: 'At least one waste type is required',
+    },
   },
   estimatedQuantity: {
     type: Number,
