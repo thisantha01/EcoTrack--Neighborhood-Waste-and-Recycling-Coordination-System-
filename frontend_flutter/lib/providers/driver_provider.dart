@@ -144,4 +144,42 @@ class DriverProvider with ChangeNotifier {
     }
     return true;
   }
+
+  Future<bool> updateRouteStopStatus({
+    required String routeId,
+    required int stopIndex,
+    required String status,
+    String? reason,
+  }) async {
+    try {
+      final response = await _driverService.updateRouteStopStatus(
+        routeId: routeId,
+        stopIndex: stopIndex,
+        status: status,
+        reason: reason,
+      );
+      final routeIndex =
+          _assignedRoutes.indexWhere((r) => r['_id']?.toString() == routeId);
+      if (routeIndex != -1) {
+        final r = Map<String, dynamic>.from(_assignedRoutes[routeIndex]);
+        final rawStops = ((r['routeStops'] as List?) ??
+                (r['stops'] as List?) ??
+                [])
+            .whereType<Map>()
+            .map((e) => Map<String, dynamic>.from(e))
+            .toList();
+        if (stopIndex >= 0 && stopIndex < rawStops.length) {
+          rawStops[stopIndex]['status'] = status;
+          r['routeStops'] = rawStops;
+          r['stops'] = rawStops;
+          _assignedRoutes[routeIndex] = r;
+          notifyListeners();
+        }
+      }
+      return response['success'] == true;
+    } catch (e) {
+      debugPrint('DriverProvider.updateRouteStopStatus error: $e');
+      return false;
+    }
+  }
 }

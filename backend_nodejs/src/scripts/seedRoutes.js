@@ -7,11 +7,25 @@ const Route = require('../src/models/Route');
 const User = require('../src/models/User');
 
 const defaultRoutes = [
-  { routeName: 'Route A', zone: 'Colombo 05', operatingDays: ['Monday', 'Thursday'], lat: 6.8897, lng: 79.8774 },
-  { routeName: 'Route B', zone: 'Colombo 07', operatingDays: ['Tuesday', 'Friday'], lat: 6.9067, lng: 79.8616 },
-  { routeName: 'Route C', zone: 'Nugegoda', operatingDays: ['Wednesday', 'Saturday'], lat: 6.8649, lng: 79.8997 },
-  { routeName: 'Route D', zone: 'Maharagama', operatingDays: ['Monday', 'Wednesday'], lat: 6.8480, lng: 79.9265 },
-  { routeName: 'Route E', zone: 'Kottawa', operatingDays: ['Tuesday', 'Thursday'], lat: 6.8010, lng: 79.9227 },
+  {
+    routeName: 'Route M - Malabe Campus Loop',
+    zone: 'Malabe',
+    operatingDays: ['Monday', 'Wednesday', 'Friday'],
+    lat: 6.9061,
+    lng: 79.9696,
+    stops: [
+      { address: 'SLIIT Campus, New Kandy Rd, Malabe', location: { lat: 6.9147, lng: 79.9733 }, sequenceOrder: 1 },
+      { address: 'Horizon Campus / Knowledge City, Malabe', location: { lat: 6.9110, lng: 79.9805 }, sequenceOrder: 2 },
+      { address: 'Kaduwela Road - Pittugala Junction', location: { lat: 6.9090, lng: 79.9660 }, sequenceOrder: 3 },
+      { address: 'Malabe Town Center / Kaduwela Rd Junction', location: { lat: 6.9042, lng: 79.9572 }, sequenceOrder: 4 },
+      { address: 'Chandrika Kumaratunga Mawatha, Malabe', location: { lat: 6.9015, lng: 79.9720 }, sequenceOrder: 5 },
+    ],
+  },
+  { routeName: 'Route A', zone: 'Colombo 05', operatingDays: ['Monday', 'Thursday'], lat: 6.8897, lng: 79.8774, stops: [] },
+  { routeName: 'Route B', zone: 'Colombo 07', operatingDays: ['Tuesday', 'Friday'], lat: 6.9067, lng: 79.8616, stops: [] },
+  { routeName: 'Route C', zone: 'Nugegoda', operatingDays: ['Wednesday', 'Saturday'], lat: 6.8649, lng: 79.8997, stops: [] },
+  { routeName: 'Route D', zone: 'Maharagama', operatingDays: ['Monday', 'Wednesday'], lat: 6.8480, lng: 79.9265, stops: [] },
+  { routeName: 'Route E', zone: 'Kottawa', operatingDays: ['Tuesday', 'Thursday'], lat: 6.8010, lng: 79.9227, stops: [] },
 ];
 
 const seedRoutes = async () => {
@@ -46,9 +60,9 @@ const seedRoutes = async () => {
           assignedDriver: driver._id,
           operatingDays: routeData.operatingDays,
           status: 'Active',
-          routeStatus: 'Active',
+          routeStops: routeData.stops || [],
+          stops: routeData.stops || [],
         },
-        $setOnInsert: { routeStops: [], stops: [] },
       },
       { upsert: true, new: true }
     );

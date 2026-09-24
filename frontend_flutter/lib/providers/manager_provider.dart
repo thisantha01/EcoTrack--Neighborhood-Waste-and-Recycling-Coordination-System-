@@ -108,7 +108,7 @@ class ManagerProvider extends ChangeNotifier {
         wasteType: _filterWasteType,
         date: _filterDate,
         page: _currentPage,
-        limit: 20,
+        limit: 50,
       );
 
       final List<dynamic> requestData = response['requests'] ?? [];
@@ -160,6 +160,10 @@ class ManagerProvider extends ChangeNotifier {
     String? description,
     String? assignedDriver,
     List<String> operatingDays = const [],
+    String targetWasteType = 'weekly_schedule',
+    List<Map<String, dynamic>> weeklyCategorySchedule = const [],
+    List<Map<String, dynamic>> routeStops = const [],
+    Map<String, double>? areaCoordinates,
   }) async {
     try {
       final response = await _managerService.createRoute(
@@ -169,12 +173,19 @@ class ManagerProvider extends ChangeNotifier {
         description: description,
         assignedDriver: assignedDriver,
         operatingDays: operatingDays,
+        targetWasteType: targetWasteType,
+        weeklyCategorySchedule: weeklyCategorySchedule,
+        routeStops: routeStops,
+        areaCoordinates: areaCoordinates,
       );
       final route = response['route'];
       if (route is Map) {
         final routeMap = Map<String, dynamic>.from(route);
         _routes = [routeMap, ..._routes];
         notifyListeners();
+        // Reactive state synchronization
+        fetchAvailableDrivers();
+        fetchDashboardStats();
         return routeMap['_id']?.toString();
       }
     } catch (e) {
@@ -182,6 +193,219 @@ class ManagerProvider extends ChangeNotifier {
       notifyListeners();
     }
     return null;
+  }
+
+  Future<bool> updateRoute({
+    required String routeId,
+    String? routeName,
+    String? zone,
+    DateTime? date,
+    String? description,
+    String? assignedDriver,
+    List<String>? operatingDays,
+    String? targetWasteType,
+    List<Map<String, dynamic>>? weeklyCategorySchedule,
+    List<Map<String, dynamic>>? routeStops,
+    Map<String, double>? areaCoordinates,
+    String? status,
+  }) async {
+    try {
+      final response = await _managerService.updateRoute(
+        routeId: routeId,
+        routeName: routeName,
+        zone: zone,
+        date: date,
+        description: description,
+        assignedDriver: assignedDriver,
+        operatingDays: operatingDays,
+        targetWasteType: targetWasteType,
+        weeklyCategorySchedule: weeklyCategorySchedule,
+        routeStops: routeStops,
+        areaCoordinates: areaCoordinates,
+        status: status,
+      );
+      final route = response['route'];
+      if (route is Map) {
+        final routeMap = Map<String, dynamic>.from(route);
+        final index = _routes.indexWhere((r) => r['_id']?.toString() == routeId);
+        if (index != -1) {
+          _routes[index] = routeMap;
+        } else {
+          _routes = [routeMap, ..._routes];
+        }
+        notifyListeners();
+        fetchAvailableDrivers();
+        fetchDashboardStats();
+        return true;
+      }
+    } catch (e) {
+      _error = e.toString().replaceFirst('Exception: ', '');
+      notifyListeners();
+    }
+    return false;
+  }
+
+  Future<bool> deleteRoute(String routeId) async {
+    try {
+      await _managerService.deleteRoute(routeId);
+      _routes.removeWhere((r) => r['_id']?.toString() == routeId);
+      notifyListeners();
+      fetchDashboardStats();
+      fetchAvailableDrivers();
+      fetchRoutes();
+      return true;
+    } catch (e) {
+      _error = e.toString().replaceFirst('Exception: ', '');
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> reorderRouteStops({
+    required String routeId,
+    required List<Map<String, dynamic>> routeStops,
+  }) async {
+    try {
+      final response = await _managerService.reorderRouteStops(
+        routeId: routeId,
+        routeStops: routeStops,
+      );
+      final route = response['route'];
+      if (route is Map) {
+        final routeMap = Map<String, dynamic>.from(route);
+        final index = _routes.indexWhere((r) => r['_id']?.toString() == routeId);
+        if (index != -1) {
+          _routes[index] = routeMap;
+        }
+      }
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = e.toString().replaceFirst('Exception: ', '');
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> updateRouteStopStatus({
+    required String routeId,
+    required int stopIndex,
+    required String status,
+    String? reason,
+  }) async {
+    try {
+      final response = await _managerService.updateRouteStopStatus(
+        routeId: routeId,
+        stopIndex: stopIndex,
+        status: status,
+        reason: reason,
+      );
+      final route = response['route'];
+      if (route is Map) {
+        final routeMap = Map<String, dynamic>.from(route);
+        final index = _routes.indexWhere((r) => r['_id']?.toString() == routeId);
+        if (index != -1) {
+          _routes[index] = routeMap;
+        }
+      }
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = e.toString().replaceFirst('Exception: ', '');
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<Map<String, dynamic>?> optimizeRouteSequence(String routeId) async {
+    try {
+      final response = await _managerService.optimizeRouteSequence(routeId);
+      final route = response['route'];
+      if (route is Map) {
+        final routeMap = Map<String, dynamic>.from(route);
+        final index = _routes.indexWhere((r) => r['_id']?.toString() == routeId);
+        if (index != -1) {
+          _routes[index] = routeMap;
+        }
+        notifyListeners();
+        return routeMap;
+      }
+      return null;
+    } catch (e) {
+      _error = e.toString().replaceFirst('Exception: ', '');
+      notifyListeners();
+      return null;
+    }
+  }
+
+  Future<bool> addStopToRoute({
+    required String routeId,
+    String? collectionRequestId,
+    required double lat,
+    required double lng,
+    required String address,
+    int? sequenceOrder,
+  }) async {
+    try {
+      final response = await _managerService.addRouteStop(
+        routeId: routeId,
+        collectionRequestId: collectionRequestId,
+        lat: lat,
+        lng: lng,
+        address: address,
+        sequenceOrder: sequenceOrder,
+      );
+      final route = response['route'];
+      if (route is Map) {
+        final routeMap = Map<String, dynamic>.from(route);
+        final index = _routes.indexWhere((r) => r['_id']?.toString() == routeId);
+        if (index != -1) {
+          _routes[index] = routeMap;
+        } else {
+          _routes = [routeMap, ..._routes];
+        }
+      }
+      notifyListeners();
+      fetchDashboardStats();
+      fetchAvailableDrivers();
+      return true;
+    } catch (e) {
+      _error = e.toString().replaceFirst('Exception: ', '');
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> removeStopFromRoute({
+    required String routeId,
+    String? collectionRequestId,
+    String? stopId,
+    int? sequenceOrder,
+  }) async {
+    try {
+      final response = await _managerService.removeRouteStop(
+        routeId: routeId,
+        collectionRequestId: collectionRequestId,
+        stopId: stopId,
+        sequenceOrder: sequenceOrder,
+      );
+      final route = response['route'];
+      if (route is Map) {
+        final routeMap = Map<String, dynamic>.from(route);
+        final index = _routes.indexWhere((r) => r['_id']?.toString() == routeId);
+        if (index != -1) {
+          _routes[index] = routeMap;
+        }
+      }
+      notifyListeners();
+      fetchDashboardStats();
+      fetchAvailableDrivers();
+      return true;
+    } catch (e) {
+      _error = e.toString().replaceFirst('Exception: ', '');
+      notifyListeners();
+      return false;
+    }
   }
 
   Future<bool> changeRouteDriver({
@@ -206,6 +430,8 @@ class ManagerProvider extends ChangeNotifier {
         }
       }
       notifyListeners();
+      fetchAvailableDrivers();
+      fetchDashboardStats();
       return true;
     } catch (e) {
       _error = e.toString().replaceFirst('Exception: ', '');
@@ -330,6 +556,10 @@ class ManagerProvider extends ChangeNotifier {
 
       _isAssigning = false;
       notifyListeners();
+
+      // Seamless state updates
+      fetchAvailableDrivers();
+      fetchDashboardStats();
       return true;
     } catch (e) {
       _error = e.toString().replaceFirst('Exception: ', '');
@@ -357,11 +587,34 @@ class ManagerProvider extends ChangeNotifier {
         date: date,
         time: time,
       );
+
       final requestData = response['request'];
       if (requestData is Map<String, dynamic>) {
         _selectedRequest = CollectionRequest.fromJson(requestData);
+
+        // Also update in _requests list so UI updates immediately
+        final index = _requests.indexWhere((r) => r.id == collectionRequestId);
+        if (index != -1) {
+          _requests[index] = _selectedRequest!;
+        }
       }
+
+      final routeData = response['route'];
+      if (routeData is Map) {
+        final routeMap = Map<String, dynamic>.from(routeData);
+        final rIndex = _routes.indexWhere((r) => r['_id']?.toString() == routeId);
+        if (rIndex != -1) {
+          _routes[rIndex] = routeMap;
+        }
+      }
+
       notifyListeners();
+
+      // State alignment: Refresh available drivers & dashboard statistics
+      fetchAvailableDrivers();
+      fetchDashboardStats();
+      fetchRoutes();
+
       return true;
     } catch (e) {
       _error = e.toString().replaceFirst('Exception: ', '');

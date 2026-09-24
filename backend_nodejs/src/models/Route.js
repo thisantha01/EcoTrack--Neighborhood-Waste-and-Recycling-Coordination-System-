@@ -5,7 +5,8 @@ const routeStopSchema = new mongoose.Schema(
     collectionRequestId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'CollectionRequest',
-      required: true,
+      required: false,
+      default: null,
     },
     location: {
       lat: {
@@ -61,6 +62,35 @@ const routeSchema = new mongoose.Schema(
       enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
       default: [],
     },
+    targetWasteType: {
+      type: String,
+      enum: [
+        'weekly_schedule',
+        'organic',
+        'plastic_paper',
+        'glass_others',
+        'special_requests',
+        'all',
+        // Backward compatibility
+        'plastic',
+        'paper',
+        'glass_metal',
+        'other',
+      ],
+      default: 'weekly_schedule',
+    },
+    weeklyCategorySchedule: [
+      {
+        day: {
+          type: String,
+          enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+        },
+        category: {
+          type: String,
+          default: 'organic',
+        },
+      },
+    ],
     date: { type: Date, default: null },
     assignedDriver: {
       type: mongoose.Schema.Types.ObjectId,

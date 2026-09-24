@@ -77,7 +77,7 @@ class _AssignDriverScreenState
       backgroundColor: const Color(0xFFF6F8FA),
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: const Color(0xFF6A1B9A),
+        backgroundColor: const Color(0xFF0097A7),
         foregroundColor: Colors.white,
         title: const Text(
           'Assign Driver',
@@ -92,12 +92,12 @@ class _AssignDriverScreenState
             margin: const EdgeInsets.all(16),
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: const Color(0xFF6A1B9A)
-                  .withOpacity(0.08),
+              color: const Color(0xFF0097A7)
+                  .withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: const Color(0xFF6A1B9A)
-                    .withOpacity(0.3),
+                color: const Color(0xFF0097A7)
+                    .withValues(alpha: 0.3),
               ),
             ),
             child: Column(
@@ -115,7 +115,7 @@ class _AssignDriverScreenState
                   children: [
                     const Icon(Icons.category,
                         size: 16,
-                        color: Color(0xFF6A1B9A)),
+                        color: Color(0xFF0097A7)),
                     const SizedBox(width: 6),
                     Text(
                       widget.requestWasteType,
@@ -131,7 +131,7 @@ class _AssignDriverScreenState
                   children: [
                     const Icon(Icons.location_on,
                         size: 16,
-                        color: Color(0xFF6A1B9A)),
+                        color: Color(0xFF0097A7)),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
@@ -174,7 +174,7 @@ class _AssignDriverScreenState
                   label: const Text('Refresh'),
                   style: TextButton.styleFrom(
                     foregroundColor:
-                        const Color(0xFF6A1B9A),
+                        const Color(0xFF0097A7),
                   ),
                 ),
               ],
@@ -189,7 +189,7 @@ class _AssignDriverScreenState
                 if (provider.isLoadingDrivers) {
                   return const Center(
                     child: CircularProgressIndicator(
-                      color: Color(0xFF6A1B9A),
+                      color: Color(0xFF0097A7),
                     ),
                   );
                 }
@@ -219,7 +219,7 @@ class _AssignDriverScreenState
                             style: ElevatedButton
                                 .styleFrom(
                               backgroundColor:
-                                  const Color(0xFF6A1B9A),
+                                  const Color(0xFF0097A7),
                               foregroundColor:
                                   Colors.white,
                             ),
@@ -317,15 +317,15 @@ class _AssignDriverScreenState
                             const EdgeInsets.all(14),
                         decoration: BoxDecoration(
                           color: isSelected
-                              ? const Color(0xFF6A1B9A)
-                                  .withOpacity(0.08)
+                              ? const Color(0xFF0097A7)
+                                  .withValues(alpha: 0.08)
                               : Colors.white,
                           borderRadius:
                               BorderRadius.circular(12),
                           border: Border.all(
                             color: isSelected
                                 ? const Color(
-                                    0xFF6A1B9A)
+                                    0xFF0097A7)
                                 : isAvailable
                                     ? Colors
                                         .grey.shade200
@@ -344,13 +344,13 @@ class _AssignDriverScreenState
                                 shape: BoxShape.circle,
                                 color: isSelected
                                     ? const Color(
-                                        0xFF6A1B9A)
+                                        0xFF0097A7)
                                     : Colors
                                         .grey.shade200,
                                 border: Border.all(
                                   color: isSelected
                                       ? const Color(
-                                          0xFF6A1B9A)
+                                          0xFF0097A7)
                                       : Colors
                                           .grey.shade400,
                                 ),
@@ -371,15 +371,15 @@ class _AssignDriverScreenState
                               radius: 22,
                               backgroundColor: isAvailable
                                   ? const Color(
-                                          0xFF6A1B9A)
-                                      .withOpacity(0.1)
+                                          0xFF0097A7)
+                                      .withValues(alpha: 0.1)
                                   : Colors
                                       .grey.shade200,
                               child: Icon(
                                 Icons.person,
                                 color: isAvailable
                                     ? const Color(
-                                        0xFF6A1B9A)
+                                        0xFF0097A7)
                                     : Colors.grey,
                                 size: 22,
                               ),
@@ -506,7 +506,7 @@ class _AssignDriverScreenState
               boxShadow: [
                 BoxShadow(
                   color: Colors.black
-                      .withOpacity(0.05),
+                      .withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, -2),
                 ),
@@ -521,7 +521,7 @@ class _AssignDriverScreenState
                     style: ElevatedButton.styleFrom(
                       backgroundColor:
                           _selectedDriverId != null
-                              ? const Color(0xFF6A1B9A)
+                              ? const Color(0xFF0097A7)
                               : Colors.grey.shade300,
                       foregroundColor:
                           _selectedDriverId != null

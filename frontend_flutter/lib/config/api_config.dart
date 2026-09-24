@@ -91,11 +91,23 @@ class ApiConfig {
   static String managerRoute(String id) => '$baseUrl/manager/routes/$id';
   static String managerRouteConfirm(String id) =>
       '$baseUrl/manager/routes/$id/confirm-request';
+  static String managerRouteAddStop(String id) =>
+      '$baseUrl/manager/routes/$id/add-stop';
+  static String managerRouteRemoveStop(String id) =>
+      '$baseUrl/manager/routes/$id/remove-stop';
+  static String managerRouteReorderStops(String id) =>
+      '$baseUrl/manager/routes/$id/reorder-stops';
   static String managerRouteChangeDriver(String id) =>
       '$baseUrl/manager/routes/$id/change-driver';
   static String get managerRouteSuggestion =>
       '$baseUrl/manager/routes/suggest-route';
 
+  static String managerRouteUpdateStopStatus(String id, int stopIndex) =>
+      '$baseUrl/manager/routes/$id/stops/$stopIndex/status';
+  static String managerRouteOptimizeSequence(String id) =>
+      '$baseUrl/manager/routes/$id/optimize-sequence';
+
   // Driver fixed routes
   static String get driverRoutes => '$baseUrl/driver/routes';
+  static String get publicRouteSchedule => '$baseUrl/manager/routes/schedule';
 }

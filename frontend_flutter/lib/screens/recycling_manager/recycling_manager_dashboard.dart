@@ -3,8 +3,10 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/manager_provider.dart';
 import '../profile/profile_screen.dart';
+import 'assign_route_screen.dart';
 import 'collection_requests_screen.dart';
 import 'manager_inventory_screen.dart';
+import 'manager_route_map_screen.dart';
 import 'manager_routes_screen.dart';
 import 'manager_waste_screen.dart';
 
@@ -103,6 +105,7 @@ class _RecyclingManagerHomeState extends State<_RecyclingManagerHome> {
         final provider = context.read<ManagerProvider>();
         provider.fetchDashboardStats();
         provider.fetchRoutes();
+        provider.fetchAvailableDrivers();
       }
     });
   }
@@ -245,6 +248,32 @@ class _RecyclingManagerHomeState extends State<_RecyclingManagerHome> {
                       ),
                     ],
                   ),
+                  Container(
+                    margin: const EdgeInsets.only(top: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.location_on, color: Colors.white, size: 12),
+                        SizedBox(width: 4),
+                        Text(
+                          'Malabe Operations Hub • SLIIT / Horizon / Kaduwela Rd',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                   const SizedBox(height: 16),
                   Row(
                     children: [
@@ -259,7 +288,7 @@ class _RecyclingManagerHomeState extends State<_RecyclingManagerHome> {
                           ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.white,
-                            foregroundColor: const Color(0xFF6A1B9A),
+                            foregroundColor: const Color(0xFF0097A7),
                             elevation: 0,
                             padding: const EdgeInsets.symmetric(vertical: 10),
                             shape: RoundedRectangleBorder(
@@ -271,14 +300,27 @@ class _RecyclingManagerHomeState extends State<_RecyclingManagerHome> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: OutlinedButton.icon(
-                          onPressed: widget.onGoToAssignRoute,
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const AssignRouteScreen(),
+                              ),
+                            ).then((_) {
+                              if (!context.mounted) return;
+                              final provider = context.read<ManagerProvider>();
+                              provider.fetchRoutes();
+                              provider.fetchAvailableDrivers();
+                              provider.fetchDashboardStats();
+                            });
+                          },
                           icon: const Icon(
                             Icons.add_location_alt,
                             color: Colors.white,
                             size: 16,
                           ),
                           label: const Text(
-                            'Assign Route',
+                            'Create Route',
                             style: TextStyle(color: Colors.white, fontSize: 12),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -368,11 +410,27 @@ class _RecyclingManagerHomeState extends State<_RecyclingManagerHome> {
                   'Assigned Routes',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
-                TextButton(
-                  onPressed: widget.onGoToAssignRoute,
-                  child: const Text(
-                    'Create New',
-                    style: TextStyle(color: Color(0xFF6A1B9A)),
+                TextButton.icon(
+                  onPressed: () async {
+                    final provider = context.read<ManagerProvider>();
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const AssignRouteScreen(),
+                      ),
+                    );
+                    if (!mounted) return;
+                    provider.fetchRoutes();
+                    provider.fetchAvailableDrivers();
+                    provider.fetchDashboardStats();
+                  },
+                  icon: const Icon(Icons.add, size: 16, color: Color(0xFF0097A7)),
+                  label: const Text(
+                    'Create Route',
+                    style: TextStyle(
+                      color: Color(0xFF0097A7),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
@@ -408,69 +466,105 @@ class _RecyclingManagerHomeState extends State<_RecyclingManagerHome> {
                           : status == 'in-progress'
                           ? Colors.orange
                           : Colors.blue;
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 10),
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.grey.shade200),
-                        ),
-                        child: Row(
-                          children: [
-                            CircleAvatar(
-                              backgroundColor: statusColor.withValues(
-                                alpha: 0.1,
-                              ),
-                              child: Icon(
-                                Icons.alt_route,
-                                color: statusColor,
-                                size: 20,
-                              ),
+                      final rawStops = (route['routeStops'] as List?) ??
+                          (route['stops'] as List?) ??
+                          const [];
+                      final stopsCount = route['activeStopCount'] ?? rawStops.length;
+                      final routeName = route['routeName']?.toString() ?? 'Route';
+                      final zone = route['zone']?.toString() ?? 'Malabe';
+
+                      return GestureDetector(
+                        onTap: () async {
+                          final provider = context.read<ManagerProvider>();
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ManagerRouteMapScreen(route: route),
                             ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    route['zone']?.toString() ??
-                                        'Unassigned area',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    '${driver is Map ? driver['name'] ?? 'Unassigned' : 'Unassigned'}',
-                                    style: const TextStyle(
-                                      color: Colors.grey,
-                                      fontSize: 11,
-                                    ),
-                                  ),
-                                ],
+                          );
+                          if (!mounted) return;
+                          provider.fetchRoutes();
+                          provider.fetchAvailableDrivers();
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 10),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.grey.shade200),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.02),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
                               ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: statusColor.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                status,
-                                style: TextStyle(
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                backgroundColor: statusColor.withValues(
+                                  alpha: 0.1,
+                                ),
+                                child: Icon(
+                                  Icons.alt_route,
                                   color: statusColor,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
+                                  size: 20,
                                 ),
                               ),
-                            ),
-                          ],
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      routeName,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Zone: $zone • Driver: ${driver is Map ? driver['name'] ?? 'Unassigned' : 'Unassigned'}',
+                                      style: TextStyle(
+                                        color: Colors.grey.shade700,
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      '$stopsCount waypoints/stops • Tap to view map',
+                                      style: const TextStyle(
+                                        color: Color(0xFF0097A7),
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: statusColor.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  status,
+                                  style: TextStyle(
+                                    color: statusColor,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       );
                     },
