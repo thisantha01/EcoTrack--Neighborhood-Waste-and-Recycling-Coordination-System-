@@ -10,6 +10,7 @@ const createRequest = async (req, res) => {
   try {
     const {
       wasteType,
+      wasteTypes,
       estimatedQuantity,
       description,
       imageUrl,
@@ -19,7 +20,10 @@ const createRequest = async (req, res) => {
       preferredTime,
     } = req.body;
 
-    if (!wasteType || !estimatedQuantity || !location) {
+    // Support both single wasteType and multiple wasteTypes
+    const types = wasteTypes && wasteTypes.length > 0 ? wasteTypes : (wasteType ? [wasteType] : []);
+
+    if (types.length === 0 || !estimatedQuantity || !location) {
       return res.status(400).json({
         success: false,
         message: 'Waste type, estimated quantity and location are required',
@@ -28,7 +32,8 @@ const createRequest = async (req, res) => {
 
     const request = await CollectionRequest.create({
       requester: req.user._id,
-      wasteType,
+      wasteType: types[0],
+      wasteTypes: types,
       estimatedQuantity,
       description: description || '',
       imageUrl: imageUrl || null,
