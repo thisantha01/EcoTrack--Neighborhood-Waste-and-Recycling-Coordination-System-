@@ -38,18 +38,23 @@ class PickupModel {
     );
   }
 
-  PickupModel copyWith({String? status}) {
+  PickupModel copyWith({
+    String? status,
+    double? weightKg,
+    String? wasteType,
+    String? notes,
+  }) {
     return PickupModel(
       id: id,
       pickupNumber: pickupNumber,
       customerName: customerName,
       customerPhone: customerPhone,
       address: address,
-      wasteType: wasteType,
-      weightKg: weightKg,
+      wasteType: wasteType ?? this.wasteType,
+      weightKg: weightKg ?? this.weightKg,
       scheduledTime: scheduledTime,
       status: status ?? this.status,
-      notes: notes,
+      notes: notes ?? this.notes,
     );
   }
 }

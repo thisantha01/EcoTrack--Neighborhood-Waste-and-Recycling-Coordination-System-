@@ -6,6 +6,7 @@ const {
   getRequestDetails,
   getAvailableDrivers,
   assignDriver,
+  getDriverLiveLocation,
 } = require('../controllers/managerController');
 
 const router = express.Router();
@@ -24,6 +25,7 @@ router.get('/collection-requests/:requestId', getRequestDetails);
 
 // View available drivers
 router.get('/drivers/available', getAvailableDrivers);
+router.get('/drivers/:driverId/location', getDriverLiveLocation);
 
 // Assign driver to request
 router.post(

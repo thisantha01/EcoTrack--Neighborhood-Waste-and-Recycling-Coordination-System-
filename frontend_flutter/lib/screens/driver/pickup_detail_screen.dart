@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/pickup_model.dart';
 import '../../providers/driver_provider.dart';
+import 'widgets/driver_bottom_navigation.dart';
 
 class PickupDetailScreen extends StatefulWidget {
   final PickupModel pickup;
@@ -16,13 +17,23 @@ class _PickupDetailScreenState extends State<PickupDetailScreen> {
   late String _currentStatus;
   bool _isUpdating = false;
 
-  final List<Map<String, String>> _statusSteps = const [
-    {'key': 'scheduled', 'label': 'Scheduled'},
-    {'key': 'accepted', 'label': 'Accepted'},
-    {'key': 'en_route', 'label': 'En Route'},
-    {'key': 'arrived', 'label': 'Arrived'},
-    {'key': 'completed', 'label': 'Collected'},
-  ];
+  bool get _isCollectionRequest =>
+      widget.pickup.pickupNumber.startsWith('REQ-');
+
+  List<Map<String, String>> get _statusSteps => _isCollectionRequest
+      ? const [
+          {'key': 'requested', 'label': 'Requested'},
+          {'key': 'accepted', 'label': 'Accepted'},
+          {'key': 'scheduled', 'label': 'Scheduled'},
+          {'key': 'collected', 'label': 'Collected'},
+        ]
+      : const [
+          {'key': 'scheduled', 'label': 'Scheduled'},
+          {'key': 'accepted', 'label': 'Accepted'},
+          {'key': 'en_route', 'label': 'En Route'},
+          {'key': 'arrived', 'label': 'Arrived'},
+          {'key': 'completed', 'label': 'Collected'},
+        ];
 
   @override
   void initState() {
@@ -36,6 +47,18 @@ class _PickupDetailScreenState extends State<PickupDetailScreen> {
   }
 
   String _getNextButtonLabel() {
+    if (_isCollectionRequest) {
+      switch (_currentStatus) {
+        case 'requested':
+          return 'Accept Pickup';
+        case 'accepted':
+          return 'Schedule Pickup';
+        case 'scheduled':
+          return 'Complete Pickup';
+        default:
+          return 'Completed';
+      }
+    }
     switch (_currentStatus) {
       case 'scheduled':
         return 'Accept Pickup';
@@ -51,6 +74,18 @@ class _PickupDetailScreenState extends State<PickupDetailScreen> {
   }
 
   String _getNextStatusKey() {
+    if (_isCollectionRequest) {
+      switch (_currentStatus) {
+        case 'requested':
+          return 'accepted';
+        case 'accepted':
+          return 'scheduled';
+        case 'scheduled':
+          return 'collected';
+        default:
+          return _currentStatus;
+      }
+    }
     switch (_currentStatus) {
       case 'scheduled':
         return 'accepted';
@@ -70,10 +105,11 @@ class _PickupDetailScreenState extends State<PickupDetailScreen> {
     setState(() => _isUpdating = true);
 
     final success = await context.read<DriverProvider>().updatePickupStatus(
-          widget.pickup.id,
-          nextStatus,
-        );
+      widget.pickup.id,
+      nextStatus,
+    );
 
+    if (!mounted) return;
     setState(() => _isUpdating = false);
 
     if (success) {
@@ -93,10 +129,7 @@ class _PickupDetailScreenState extends State<PickupDetailScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0.5,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Color(0xFF0F2E1D)),
-          onPressed: () => Navigator.pop(context),
-        ),
+        automaticallyImplyLeading: false,
         title: Text(
           'Pickup #${widget.pickup.pickupNumber}',
           style: const TextStyle(
@@ -131,7 +164,10 @@ class _PickupDetailScreenState extends State<PickupDetailScreen> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.storefront_outlined, color: Color(0xFF64748B)),
+                  const Icon(
+                    Icons.storefront_outlined,
+                    color: Color(0xFF64748B),
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -148,7 +184,10 @@ class _PickupDetailScreenState extends State<PickupDetailScreen> {
                         const SizedBox(height: 4),
                         Text(
                           widget.pickup.address,
-                          style: const TextStyle(color: Color(0xFF64748B), fontSize: 15),
+                          style: const TextStyle(
+                            color: Color(0xFF64748B),
+                            fontSize: 15,
+                          ),
                         ),
                       ],
                     ),
@@ -163,7 +202,10 @@ class _PickupDetailScreenState extends State<PickupDetailScreen> {
                     const SizedBox(width: 12),
                     Text(
                       widget.pickup.customerPhone!,
-                      style: const TextStyle(color: Color(0xFF0F2E1D), fontSize: 15),
+                      style: const TextStyle(
+                        color: Color(0xFF0F2E1D),
+                        fontSize: 15,
+                      ),
                     ),
                   ],
                 ),
@@ -186,7 +228,11 @@ class _PickupDetailScreenState extends State<PickupDetailScreen> {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(Icons.recycling, color: Color(0xFF64748B), size: 28),
+                          const Icon(
+                            Icons.recycling,
+                            color: Color(0xFF64748B),
+                            size: 28,
+                          ),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Column(
@@ -203,12 +249,18 @@ class _PickupDetailScreenState extends State<PickupDetailScreen> {
                                 const SizedBox(height: 4),
                                 Text(
                                   '${widget.pickup.weightKg} kg',
-                                  style: const TextStyle(color: Color(0xFF64748B), fontSize: 15),
+                                  style: const TextStyle(
+                                    color: Color(0xFF64748B),
+                                    fontSize: 15,
+                                  ),
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
                                   widget.pickup.scheduledTime,
-                                  style: const TextStyle(color: Color(0xFF64748B), fontSize: 15),
+                                  style: const TextStyle(
+                                    color: Color(0xFF64748B),
+                                    fontSize: 15,
+                                  ),
                                 ),
                               ],
                             ),
@@ -238,8 +290,8 @@ class _PickupDetailScreenState extends State<PickupDetailScreen> {
                                       color: isPassed
                                           ? const Color(0xFF2E7D32)
                                           : isCurrent
-                                              ? const Color(0xFF2E7D32)
-                                              : const Color(0xFFE2E8F0),
+                                          ? const Color(0xFF2E7D32)
+                                          : const Color(0xFFE2E8F0),
                                     ),
                                     child: Icon(
                                       isPassed ? Icons.check : Icons.circle,
@@ -251,7 +303,9 @@ class _PickupDetailScreenState extends State<PickupDetailScreen> {
                                     Container(
                                       width: 2,
                                       height: 32,
-                                      color: isPassed ? const Color(0xFF2E7D32) : const Color(0xFFE2E8F0),
+                                      color: isPassed
+                                          ? const Color(0xFF2E7D32)
+                                          : const Color(0xFFE2E8F0),
                                     ),
                                 ],
                               ),
@@ -260,12 +314,14 @@ class _PickupDetailScreenState extends State<PickupDetailScreen> {
                                 step['label']!,
                                 style: TextStyle(
                                   fontSize: 15,
-                                  fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
+                                  fontWeight: isCurrent
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
                                   color: isCurrent
                                       ? const Color(0xFF2E7D32)
                                       : isPassed
-                                          ? const Color(0xFF64748B)
-                                          : const Color(0xFF94A3B8),
+                                      ? const Color(0xFF64748B)
+                                      : const Color(0xFF94A3B8),
                                 ),
                               ),
                             ],
@@ -276,7 +332,9 @@ class _PickupDetailScreenState extends State<PickupDetailScreen> {
                   ],
                 ),
               ),
-              if (_currentStatus != 'completed')
+              if (_currentStatus != 'completed' &&
+                  _currentStatus != 'collected' &&
+                  _currentStatus != 'cancelled')
                 SizedBox(
                   width: double.infinity,
                   height: 52,
@@ -304,6 +362,7 @@ class _PickupDetailScreenState extends State<PickupDetailScreen> {
           ),
         ),
       ),
+      bottomNavigationBar: const DriverBottomNavigation(selectedIndex: 1),
     );
   }
 }
