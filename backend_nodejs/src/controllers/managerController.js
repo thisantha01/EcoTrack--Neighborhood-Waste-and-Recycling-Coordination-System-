@@ -2,6 +2,19 @@ const CollectionRequest = require('../models/CollectionRequest');
 const DriverAssignment = require('../models/DriverAssignment');
 const User = require('../models/User');
 
+const getDriverLiveLocation = async (req, res) => {
+  try {
+    const driver = await User.findOne({ _id: req.params.driverId, role: 'driver' })
+      .select('liveLocation');
+    if (!driver) {
+      return res.status(404).json({ success: false, message: 'Driver not found' });
+    }
+    return res.status(200).json({ success: true, liveLocation: driver.liveLocation });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Unable to fetch driver location' });
+  }
+};
+
 
 // =====================================================
 // GET DASHBOARD STATS
@@ -420,6 +433,7 @@ const assignDriver = async (req, res) => {
 // =====================================================
 
 module.exports = {
+  getDriverLiveLocation,
   getDashboardStats,
   getCollectionRequests,
   getRequestDetails,

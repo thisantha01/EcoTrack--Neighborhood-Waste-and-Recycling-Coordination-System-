@@ -62,6 +62,14 @@ const userSchema = new mongoose.Schema(
       lng: { type: Number, default: null },
     },
 
+    // Last location reported by a driver while an active route is open.
+    // This is not the user's saved profile/home location.
+    liveLocation: {
+      lat: { type: Number, default: null },
+      lng: { type: Number, default: null },
+      updatedAt: { type: Date, default: null },
+    },
+
     // Role-specific
     restaurantName: {
       type: String,

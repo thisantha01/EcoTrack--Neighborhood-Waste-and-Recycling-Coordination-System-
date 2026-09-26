@@ -43,6 +43,16 @@ const collectionRequestSchema = new mongoose.Schema({
     required: [true, 'Estimated quantity is required'],
     min: 0
   },
+  collectedQuantity: {
+    type: Number,
+    min: 0,
+    default: null,
+  },
+  driverNotes: {
+    type: String,
+    default: '',
+    trim: true,
+  },
   description: {
     type: String,
     default: ''

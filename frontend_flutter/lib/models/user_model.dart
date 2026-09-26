@@ -17,6 +17,28 @@ class LocationCoordinates {
       };
 }
 
+class LiveLocation {
+  final double? lat;
+  final double? lng;
+  final DateTime? updatedAt;
+
+  LiveLocation({this.lat, this.lng, this.updatedAt});
+
+  factory LiveLocation.fromJson(Map<String, dynamic> json) => LiveLocation(
+        lat: (json['lat'] as num?)?.toDouble(),
+        lng: (json['lng'] as num?)?.toDouble(),
+        updatedAt: json['updatedAt'] == null
+            ? null
+            : DateTime.tryParse(json['updatedAt'].toString()),
+      );
+
+  Map<String, dynamic> toJson() => {
+        'lat': lat,
+        'lng': lng,
+        'updatedAt': updatedAt?.toIso8601String(),
+      };
+}
+
 class UserModel {
   final String id;
   final String name;
@@ -25,6 +47,7 @@ class UserModel {
   final String role;
   final String? location;
   final LocationCoordinates? locationCoordinates;
+  final LiveLocation? liveLocation;
   final String? profilePicture;
   final String? bio;
   final String? restaurantName;
@@ -40,6 +63,7 @@ class UserModel {
     required this.role,
     this.location,
     this.locationCoordinates,
+    this.liveLocation,
     this.profilePicture,
     this.bio,
     this.restaurantName,
@@ -55,6 +79,9 @@ class UserModel {
         Map<String, dynamic>.from(json['locationCoordinates']),
       );
     }
+    final liveLocation = json['liveLocation'] is Map
+        ? LiveLocation.fromJson(Map<String, dynamic>.from(json['liveLocation']))
+        : null;
     return UserModel(
       id: json['_id']?.toString() ?? json['id']?.toString() ?? '',
       name: json['name'] ?? '',
@@ -63,6 +90,7 @@ class UserModel {
       role: json['role'] ?? '',
       location: json['location'],
       locationCoordinates: coords,
+      liveLocation: liveLocation,
       profilePicture: json['profilePicture'],
       bio: json['bio'],
       restaurantName: json['restaurantName'],
@@ -81,6 +109,7 @@ class UserModel {
       'role': role,
       'location': location,
       'locationCoordinates': locationCoordinates?.toJson(),
+      'liveLocation': liveLocation?.toJson(),
       'profilePicture': profilePicture,
       'bio': bio,
       'restaurantName': restaurantName,
@@ -95,6 +124,7 @@ class UserModel {
     String? phone,
     String? location,
     LocationCoordinates? locationCoordinates,
+    LiveLocation? liveLocation,
     String? profilePicture,
     String? bio,
     String? restaurantName,
@@ -110,6 +140,7 @@ class UserModel {
       role: role,
       location: location ?? this.location,
       locationCoordinates: locationCoordinates ?? this.locationCoordinates,
+      liveLocation: liveLocation ?? this.liveLocation,
       profilePicture: profilePicture ?? this.profilePicture,
       bio: bio ?? this.bio,
       restaurantName: restaurantName ?? this.restaurantName,

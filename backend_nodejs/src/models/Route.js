@@ -28,8 +28,12 @@ const routeStopSchema = new mongoose.Schema(
       enum: ['pending', 'collected', 'skipped'],
       default: 'pending',
     },
+    updatedAt: {
+      type: Date,
+      default: null,
+    },
   },
-  { _id: false }
+  { _id: true }
 );
 
 const routeSchema = new mongoose.Schema(
