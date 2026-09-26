@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../providers/driver_provider.dart';
 import 'pickup_detail_screen.dart';
-import 'widgets/driver_bottom_navigation.dart';
+
 
 class TodayScheduleScreen extends StatefulWidget {
   const TodayScheduleScreen({super.key, this.showBottomNavigationBar = true});
@@ -89,9 +89,7 @@ class _TodayScheduleScreenState extends State<TodayScheduleScreen>
                 ],
               ),
             ),
-      bottomNavigationBar: widget.showBottomNavigationBar
-          ? const DriverBottomNavigation(selectedIndex: 1)
-          : null,
+      
     );
   }
 

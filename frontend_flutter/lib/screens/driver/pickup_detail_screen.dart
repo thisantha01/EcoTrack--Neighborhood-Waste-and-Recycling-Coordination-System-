@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/pickup_model.dart';
 import '../../providers/driver_provider.dart';
-import 'widgets/driver_bottom_navigation.dart';
+
 
 class PickupDetailScreen extends StatefulWidget {
   final PickupModel pickup;
@@ -362,7 +362,7 @@ class _PickupDetailScreenState extends State<PickupDetailScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: const DriverBottomNavigation(selectedIndex: 1),
+      
     );
   }
 }

@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/driver_provider.dart';
 import '../profile/profile_screen.dart';
-import 'assign_pickup_screen.dart';
+import 'today_schedule_screen.dart';
 import 'today_route_screen.dart';
 
 class DriverDashboard extends StatefulWidget {
@@ -22,7 +22,7 @@ class _DriverDashboardState extends State<DriverDashboard> {
     const pages = [
       _DriverHome(),
       TodayRouteScreen(),
-      AssignPickupScreen(),
+      TodayScheduleScreen(),
       ProfileScreen(),
     ];
     return Scaffold(

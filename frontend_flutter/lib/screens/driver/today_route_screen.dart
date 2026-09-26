@@ -4,7 +4,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/driver_provider.dart';
-import 'widgets/driver_bottom_navigation.dart';
+
 
 class TodayRouteScreen extends StatefulWidget {
   const TodayRouteScreen({super.key, this.showBottomNavigationBar = true});
@@ -102,9 +102,7 @@ class _TodayRouteScreenState extends State<TodayRouteScreen> {
                     _StopList(route: route!, stops: stops, onTap: (stop) => _showStopActions(route, stop)),
                 ],
               ),
-      bottomNavigationBar: widget.showBottomNavigationBar
-          ? const DriverBottomNavigation(selectedIndex: 2)
-          : null,
+     
     );
   }
 
