@@ -23,9 +23,15 @@ class DriverProvider with ChangeNotifier {
   double _totalCollectedWeight = 0;
   Map<String, double> _collectedByCategory = {};
   int _progressPercent = 0;
+  int _completedRouteStops = 0;
+  int _totalRouteStops = 0;
   PickupModel? _nextPickup;
   List<PickupModel> _scheduleList = [];
   List<Map<String, dynamic>> _assignedRoutes = [];
+  Map<String, int> _stopSummary = {'assigned': 0, 'completed': 0, 'remaining': 0, 'collected': 0};
+  List<PickupModel> _specialRequestPickups = [];
+  List<Map<String, dynamic>> _weighInHistory = [];
+  Map<String, double> _weighInTotals = {};
   bool _isRoutesLoading = false;
 
   bool get isDashboardLoading => _isDashboardLoading;
@@ -40,12 +46,18 @@ class DriverProvider with ChangeNotifier {
   Map<String, double> get collectedByCategory =>
       Map.unmodifiable(_collectedByCategory);
   int get progressPercent => _progressPercent;
+  int get completedRouteStops => _completedRouteStops;
+  int get totalRouteStops => _totalRouteStops;
   PickupModel? get nextPickup => _nextPickup;
   List<PickupModel> get scheduleList => List.unmodifiable(_scheduleList);
   List<Map<String, dynamic>> get assignedRoutes =>
       List.unmodifiable(_assignedRoutes);
   bool get isRoutesLoading => _isRoutesLoading;
   Position? get liveLocation => _liveLocation;
+  Map<String, int> get stopSummary => Map.unmodifiable(_stopSummary);
+  List<PickupModel> get specialRequestPickups => List.unmodifiable(_specialRequestPickups);
+  List<Map<String, dynamic>> get weighInHistory => List.unmodifiable(_weighInHistory);
+  Map<String, double> get weighInTotals => Map.unmodifiable(_weighInTotals);
 
   Future<void> fetchAssignedRoutes() async {
     _isRoutesLoading = true;
@@ -80,6 +92,8 @@ class DriverProvider with ChangeNotifier {
       _totalCollectedWeight =
           (metrics['totalCollectedWeight'] as num?)?.toDouble() ?? 0;
       _progressPercent = (metrics['progressPercent'] as num?)?.toInt() ?? 0;
+      _completedRouteStops = (metrics['completedRouteStops'] as num?)?.toInt() ?? 0;
+      _totalRouteStops = (metrics['totalRouteStops'] as num?)?.toInt() ?? 0;
       final categories = metrics['collectedByCategory'];
       _collectedByCategory = categories is Map
           ? categories.map(
@@ -105,6 +119,22 @@ class DriverProvider with ChangeNotifier {
                 .map((route) => Map<String, dynamic>.from(route))
                 .toList()
           : [];
+      final stopSummary = res['stopSummary'];
+      _stopSummary = stopSummary is Map
+          ? stopSummary.map((key, value) => MapEntry(key.toString(), (value as num?)?.toInt() ?? 0))
+          : {'assigned': 0, 'completed': 0, 'remaining': 0, 'collected': 0};
+      final special = res['specialRequestPickups'];
+      _specialRequestPickups = special is List
+          ? special.whereType<Map>().map((item) => PickupModel.fromJson(Map<String, dynamic>.from(item))).toList()
+          : [];
+      final rawHistory = res['weighInHistory'];
+      _weighInHistory = rawHistory is List
+          ? rawHistory.whereType<Map>().map((item) => Map<String, dynamic>.from(item)).toList()
+          : [];
+      final rawTotals = res['weighInTotals'];
+      _weighInTotals = rawTotals is Map
+          ? rawTotals.map((key, value) => MapEntry(key.toString(), (value as num?)?.toDouble() ?? 0))
+          : {};
 
       final nextPickup = res['nextPickup'];
       _nextPickup = nextPickup is Map
@@ -126,6 +156,19 @@ class DriverProvider with ChangeNotifier {
       _isDashboardLoading = false;
       notifyListeners();
     }
+  }
+
+  Future<void> submitWeighIn({
+    String? routeId,
+    required Map<String, double> weightsKg,
+    required String notes,
+  }) async {
+    await _driverService.submitWeighIn(
+      routeId: routeId,
+      weightsKg: weightsKg,
+      notes: notes,
+    );
+    await fetchDashboardData();
   }
 
   Future<void> fetchTodaySchedule({bool silent = false}) async {
@@ -150,31 +193,6 @@ class DriverProvider with ChangeNotifier {
   }
 
   void _calculateStatsFromSchedule() {
-    _totalPickups = _scheduleList.length;
-    final completed = _scheduleList
-        .where((pickup) => ['completed', 'collected'].contains(pickup.status))
-        .toList();
-    _completedPickups = completed.length;
-    _cancelledPickups = _scheduleList
-        .where((pickup) => pickup.status == 'cancelled')
-        .length;
-    _remainingPickups = (_totalPickups - _completedPickups - _cancelledPickups)
-        .clamp(0, _totalPickups);
-    _progressPercent = _totalPickups == 0
-        ? 0
-        : ((_completedPickups / _totalPickups) * 100).round();
-    _collectedByCategory = {};
-    _totalCollectedWeight = 0;
-    for (final pickup in completed) {
-      final category = pickup.wasteType.trim().toLowerCase();
-      final key = category.isEmpty ? 'other' : category;
-      _collectedByCategory.update(
-        key,
-        (weight) => weight + pickup.weightKg,
-        ifAbsent: () => pickup.weightKg,
-      );
-      _totalCollectedWeight += pickup.weightKg;
-    }
     if (_scheduleList.isEmpty) {
       _nextPickup = null;
       return;
@@ -214,12 +232,7 @@ class DriverProvider with ChangeNotifier {
       return false;
     }
 
-    final index = _scheduleList.indexWhere((p) => p.id == pickupId);
-    if (index != -1) {
-      _scheduleList[index] = _scheduleList[index].copyWith(status: status);
-      _calculateStatsFromSchedule();
-      notifyListeners();
-    }
+    await fetchDashboardData();
     return true;
   }
 
@@ -307,7 +320,9 @@ class DriverProvider with ChangeNotifier {
         _assignedRoutes[routeIndex] = confirmedRoute;
         notifyListeners();
       }
-      return response['success'] == true;
+      final updated = response['success'] == true;
+      if (updated) await fetchDashboardData();
+      return updated;
     } catch (e) {
       debugPrint('DriverProvider.updateRouteStopStatus error: $e');
       if (routeIndex != -1 && previousStops != null) {
@@ -319,6 +334,24 @@ class DriverProvider with ChangeNotifier {
       }
       return false;
     }
+  }
+
+  Future<bool> endAssignedRoute(String routeId) async {
+    final ended = await _driverService.endAssignedRoute(routeId);
+    if (ended) {
+      await fetchAssignedRoutes();
+      await fetchDashboardData();
+    }
+    return ended;
+  }
+
+  Future<bool> resetAssignedRoute(String routeId) async {
+    final reset = await _driverService.resetAssignedRoute(routeId);
+    if (reset) {
+      await fetchAssignedRoutes();
+      await fetchDashboardData();
+    }
+    return reset;
   }
 
   Future<void> startLiveTracking() async {

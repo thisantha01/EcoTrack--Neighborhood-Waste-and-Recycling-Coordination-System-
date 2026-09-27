@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/pickup_model.dart';
 import '../../providers/driver_provider.dart';
+import 'widgets/driver_bottom_navigation_bar.dart';
 
 
 class PickupDetailScreen extends StatefulWidget {
@@ -126,10 +127,23 @@ class _PickupDetailScreenState extends State<PickupDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAF9),
+
+      bottomNavigationBar: const DriverBottomNavigationBar(selectedIndex: 2),
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0.5,
         automaticallyImplyLeading: false,
+
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back,
+            color: Color(0xFF0F2E1D),
+          ),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+
         title: Text(
           'Pickup #${widget.pickup.pickupNumber}',
           style: const TextStyle(
@@ -139,13 +153,19 @@ class _PickupDetailScreenState extends State<PickupDetailScreen> {
           ),
         ),
         centerTitle: true,
+
         actions: [
           IconButton(
-            icon: const Icon(Icons.more_horiz, color: Color(0xFF0F2E1D)),
+            icon: const Icon(
+              Icons.more_horiz,
+              color: Color(0xFF0F2E1D),
+            ),
             onPressed: () {},
           ),
         ],
       ),
+
+
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(20.0),

@@ -136,4 +136,48 @@ class DriverService {
       authenticated: true,
     );
   }
+
+  Future<bool> endAssignedRoute(String routeId) async {
+    try {
+      final response = await _apiService.patch(
+        '${ApiConfig.baseUrl}/driver/routes/$routeId/end',
+        const {},
+        authenticated: true,
+      );
+      return response['success'] == true;
+    } catch (e) {
+      debugPrint('DriverService.endAssignedRoute error: $e');
+      return false;
+    }
+  }
+
+  Future<bool> resetAssignedRoute(String routeId) async {
+    try {
+      final response = await _apiService.patch(
+        '${ApiConfig.baseUrl}/driver/routes/$routeId/reset',
+        const {},
+        authenticated: true,
+      );
+      return response['success'] == true;
+    } catch (e) {
+      debugPrint('DriverService.resetAssignedRoute error: $e');
+      return false;
+    }
+  }
+
+  Future<void> submitWeighIn({
+    String? routeId,
+    required Map<String, double> weightsKg,
+    required String notes,
+  }) async {
+    await _apiService.post(
+      '${ApiConfig.baseUrl}/driver/weigh-ins',
+      {
+        if (routeId != null) 'routeId': routeId,
+        'weightsKg': weightsKg,
+        'notes': notes,
+      },
+      authenticated: true,
+    );
+  }
 }
