@@ -100,7 +100,10 @@ class WasteManagementApp extends StatelessWidget {
           // Role-Based Dashboards
           '/neighbour-dashboard': (context) => const NeighbourDashboard(),
           '/restaurant-dashboard': (context) => const RestaurantDashboard(),
-          '/driver-dashboard': (context) => const DriverDashboard(),
+          '/driver-dashboard': (context) => DriverDashboard(
+                initialIndex:
+                    ModalRoute.of(context)?.settings.arguments as int? ?? 0,
+              ),
           '/recycling-manager-dashboard': (context) =>
               const RecyclingManagerDashboard(),
 

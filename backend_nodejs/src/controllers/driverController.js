@@ -2,6 +2,22 @@ const Pickup = require('../models/pickup');
 const User = require('../models/User'); 
 const Route = require('../models/Route');
 const CollectionRequest = require('../models/CollectionRequest');
+const WasteWeighIn = require('../models/WasteWeighIn');
+
+const getTodayRequestFilter = (driverId, startOfDay, endOfDay) => ({
+  assignedDriver: driverId,
+  $or: [
+    { preferredDate: { $gte: startOfDay, $lte: endOfDay } },
+    {
+      statusHistory: {
+        $elemMatch: {
+          status: { $in: ['accepted', 'scheduled', 'collected'] },
+          timestamp: { $gte: startOfDay, $lte: endOfDay },
+        },
+      },
+    },
+  ],
+});
 
 /**
  * @desc    Get fixed routes and collection requests assigned to the driver
@@ -14,7 +30,7 @@ exports.getAssignedRoutes = async (req, res) => {
       assignedDriver: req.user._id,
       $or: [
         { routeStatus: 'Active' },
-        { status: { $in: ['Active', 'assigned', 'in-progress'] } },
+        { status: { $in: ['Active', 'assigned', 'in-progress', 'completed'] } },
       ],
     })
       .sort({ date: 1 })
@@ -53,19 +69,21 @@ exports.getDashboardOverview = async (req, res) => {
     const endOfDay = new Date();
     endOfDay.setHours(23, 59, 59, 999);
 
-    const [requests, legacyPickups, routes] = await Promise.all([
-      CollectionRequest.find({
-        assignedDriver: driverId,
-        preferredDate: { $gte: startOfDay, $lte: endOfDay },
-      }).sort({ preferredTime: 1, createdAt: 1 }).populate('requester', 'name phone'),
+    const [requests, legacyPickups, routes, allRequests, allRoutes, weighIns] = await Promise.all([
+      CollectionRequest.find(getTodayRequestFilter(driverId, startOfDay, endOfDay))
+        .sort({ preferredTime: 1, createdAt: 1 }).populate('requester', 'name phone'),
       Pickup.find({
         driverId,
         createdAt: { $gte: startOfDay, $lte: endOfDay },
       }).sort({ scheduledTime: 1, createdAt: 1 }),
       Route.find({
         assignedDriver: driverId,
-        $or: [{ routeStatus: 'Active' }, { status: { $in: ['Active', 'assigned', 'in-progress'] } }],
+        $or: [{ routeStatus: 'Active' }, { status: { $in: ['Active', 'assigned', 'in-progress', 'completed'] } }],
       }).sort({ date: 1 }),
+      CollectionRequest.find({ assignedDriver: driverId }).sort({ createdAt: -1 })
+        .populate('requester', 'name phone'),
+      Route.find({ assignedDriver: driverId }),
+      WasteWeighIn.find({ driver: driverId }).sort({ recordedAt: -1 }).populate('route', 'routeName zone'),
     ]);
 
     // CollectionRequest is the current collection workflow. Pickup remains
@@ -86,19 +104,30 @@ exports.getDashboardOverview = async (req, res) => {
       ...legacyPickups.map((pickup) => pickup.toObject()),
     ];
 
-    const completed = todayPickups.filter((pickup) =>
+    const currentDayRoutes = routes.filter((route) => {
+      if (route.status !== 'completed') return true;
+      const endedAt = route.lastRunEndedAt;
+      return endedAt && endedAt >= startOfDay && endedAt <= endOfDay;
+    });
+    const todayStops = currentDayRoutes.flatMap((route) =>
+      route.routeStops?.length ? route.routeStops : route.stops || []
+    );
+    const completedStops = todayStops.filter((stop) => ['collected', 'skipped'].includes(stop.status));
+    const collectedStops = todayStops.filter((stop) => stop.status === 'collected');
+    const remainingStops = todayStops.filter((stop) => stop.status === 'pending');
+    const completedPickupRecords = todayPickups.filter((pickup) =>
       ['completed', 'collected'].includes((pickup.status || '').toLowerCase())
     );
-    const cancelledPickups = todayPickups.filter((pickup) =>
+    const cancelledPickupRecords = todayPickups.filter((pickup) =>
       (pickup.status || '').toLowerCase() === 'cancelled'
     );
-    const remainingPickups = todayPickups.length - completed.length - cancelledPickups.length;
-    const collectedByCategory = completed.reduce((totals, pickup) => {
+    const remainingPickups = todayPickups.length - completedPickupRecords.length - cancelledPickupRecords.length;
+    const collectedByCategory = completedPickupRecords.reduce((totals, pickup) => {
       const category = (pickup.wasteType || 'other').toLowerCase();
       totals[category] = (totals[category] || 0) + (Number(pickup.weightKg) || 0);
       return totals;
     }, {});
-    const totalCollectedWeight = completed.reduce(
+    const totalCollectedWeight = completedPickupRecords.reduce(
       (total, pickup) => total + (Number(pickup.weightKg) || 0),
       0
     );
@@ -106,19 +135,59 @@ exports.getDashboardOverview = async (req, res) => {
       !['completed', 'collected', 'cancelled'].includes((pickup.status || '').toLowerCase())
     ) || null;
 
+    const specialRequestPickups = allRequests.map((request) => ({
+      _id: request._id,
+      pickupNumber: `REQ-${request._id.toString().slice(-6).toUpperCase()}`,
+      customerName: request.requester?.name || 'Collection requester',
+      customerPhone: request.requester?.phone,
+      address: request.location,
+      wasteType: request.wasteType,
+      weightKg: request.collectedQuantity ?? request.estimatedQuantity ?? 0,
+      scheduledTime: request.preferredTime || '',
+      status: request.status === 'collected' ? 'completed' : request.status,
+      notes: request.driverNotes || request.description,
+      createdAt: request.createdAt,
+    }));
+    const stopSummary = allRoutes.reduce((summary, route) => {
+      const stops = route.routeStops?.length ? route.routeStops : route.stops || [];
+      const runs = [...(route.runHistory || []).map((run) => run.stops || []), stops];
+      for (const runStops of runs) {
+        summary.assigned += runStops.length;
+        summary.collected += runStops.filter((stop) => stop.status === 'collected').length;
+        summary.completed += runStops.filter((stop) => ['collected', 'skipped'].includes(stop.status)).length;
+      }
+      return summary;
+    }, { assigned: 0, completed: 0, collected: 0 });
+    stopSummary.remaining = Math.max(0, stopSummary.assigned - stopSummary.completed);
+    const weighInTotals = weighIns.reduce((totals, weighIn) => {
+      for (const category of ['organic', 'plasticPaper', 'glassOthers']) {
+        totals[category] += Number(weighIn.weightsKg?.[category]) || 0;
+      }
+      return totals;
+    }, { organic: 0, plasticPaper: 0, glassOthers: 0 });
+
     return res.status(200).json({
       success: true,
       driver,
       todayPickups,
-      routes,
+      routes: currentDayRoutes,
+      stopSummary,
+      specialRequestPickups,
+      weighInHistory: weighIns,
+      weighInTotals,
       metrics: {
         totalPickups: todayPickups.length,
-        completedPickups: completed.length,
+        completedPickups: completedPickupRecords.length,
         remainingPickups,
-        cancelledPickups: cancelledPickups.length,
+        cancelledPickups: cancelledPickupRecords.length,
+        collectedStops: collectedStops.length,
         totalCollectedWeight,
         collectedByCategory,
-        progressPercent: todayPickups.length === 0 ? 0 : Math.round((completed.length / todayPickups.length) * 100),
+        progressPercent: todayStops.length === 0 ? 0 : Math.round((completedStops.length / todayStops.length) * 100),
+        totalRouteStops: todayStops.length,
+        completedRouteStops: completedStops.length,
+        remainingRouteStops: remainingStops.length,
+        collectedRouteStops: collectedStops.length,
       },
       nextPickup,
     });
@@ -147,10 +216,26 @@ exports.getTodaySchedule = async (req, res) => {
     const endOfDay = new Date();
     endOfDay.setHours(23, 59, 59, 999);
 
-    const pickups = await Pickup.find({
+    const [legacyPickups, requests] = await Promise.all([Pickup.find({
       driverId,
       createdAt: { $gte: startOfDay, $lte: endOfDay },
-    }).sort({ createdAt: 1 });
+    }).sort({ createdAt: 1 }), CollectionRequest.find(getTodayRequestFilter(driverId, startOfDay, endOfDay))
+      .sort({ preferredTime: 1, createdAt: 1 }).populate('requester', 'name phone')]);
+    const pickups = [
+      ...requests.map((request) => ({
+        _id: request._id,
+        pickupNumber: `REQ-${request._id.toString().slice(-6).toUpperCase()}`,
+        customerName: request.requester?.name || 'Collection requester',
+        customerPhone: request.requester?.phone,
+        address: request.location,
+        wasteType: request.wasteType,
+        weightKg: request.collectedQuantity ?? request.estimatedQuantity ?? 0,
+        scheduledTime: request.preferredTime || '',
+        status: request.status === 'collected' ? 'completed' : request.status,
+        notes: request.driverNotes || request.description,
+      })),
+      ...legacyPickups.map((pickup) => pickup.toObject()),
+    ];
 
     res.status(200).json({
       success: true,
@@ -329,6 +414,34 @@ exports.updatePickupDetails = async (req, res) => {
   }
 };
 
+/** Record category totals weighed at the recycling center after a route/day. */
+exports.createWasteWeighIn = async (req, res) => {
+  try {
+    const { routeId, weightsKg, notes } = req.body;
+    const categories = ['organic', 'plasticPaper', 'glassOthers'];
+    if (!weightsKg || categories.some((key) => !Number.isFinite(Number(weightsKg[key])) || Number(weightsKg[key]) < 0)) {
+      return res.status(400).json({ success: false, message: 'Enter a valid zero or greater weight for each category' });
+    }
+
+    let route = null;
+    if (routeId) {
+      route = await Route.findOne({ _id: routeId, assignedDriver: req.user._id });
+      if (!route) return res.status(404).json({ success: false, message: 'Assigned route not found' });
+    }
+
+    const weighIn = await WasteWeighIn.create({
+      driver: req.user._id,
+      route: route?._id || null,
+      weightsKg: Object.fromEntries(categories.map((key) => [key, Number(weightsKg[key])])),
+      notes: String(notes || '').trim(),
+    });
+    return res.status(201).json({ success: true, weighIn, message: 'Recycling center weights saved' });
+  } catch (error) {
+    console.error('Create waste weigh-in error:', error);
+    return res.status(500).json({ success: false, message: 'Unable to save recycling center weights' });
+  }
+};
+
 /**
  * @desc    Save the authenticated driver's latest location
  * @route   POST /api/driver/location
@@ -377,6 +490,9 @@ exports.updateAssignedRouteStopStatus = async (req, res) => {
     if (!route) {
       return res.status(404).json({ success: false, message: 'Assigned route not found' });
     }
+    if (route.status === 'completed') {
+      return res.status(409).json({ success: false, message: 'This route has ended. Reset it to start another day.' });
+    }
 
     const stops = route.routeStops?.length ? route.routeStops : route.stops;
     let stop = stopId ? stops.id(stopId) : null;
@@ -404,5 +520,50 @@ exports.updateAssignedRouteStopStatus = async (req, res) => {
   } catch (error) {
     console.error('Update assigned route stop error:', error);
     return res.status(500).json({ success: false, message: 'Unable to update route stop' });
+  }
+};
+
+/** End today's assigned route while preserving its stop results for history. */
+exports.endAssignedRoute = async (req, res) => {
+  try {
+    const route = await Route.findOne({ _id: req.params.routeId, assignedDriver: req.user._id });
+    if (!route) return res.status(404).json({ success: false, message: 'Assigned route not found' });
+    if (route.status === 'completed') return res.status(409).json({ success: false, message: 'This route has already ended' });
+    const now = new Date();
+    route.status = 'completed';
+    route.routeStatus = 'Inactive';
+    route.lastRunEndedAt = now;
+    await route.save();
+    return res.status(200).json({ success: true, route, message: 'Route ended. You can now drop collected waste at the recycling center.' });
+  } catch (error) {
+    console.error('End assigned route error:', error);
+    return res.status(500).json({ success: false, message: 'Unable to end this route' });
+  }
+};
+
+/** Archive the completed run and reset stop statuses for another day. */
+exports.resetAssignedRoute = async (req, res) => {
+  try {
+    const route = await Route.findOne({ _id: req.params.routeId, assignedDriver: req.user._id });
+    if (!route) return res.status(404).json({ success: false, message: 'Assigned route not found' });
+    if (route.status !== 'completed') return res.status(409).json({ success: false, message: 'End this route before resetting it for another day' });
+    const now = new Date();
+    const stops = route.routeStops?.length ? route.routeStops : route.stops || [];
+    route.runHistory.push({ startedAt: route.runStartedAt || route.createdAt || now, endedAt: route.lastRunEndedAt || now, stops: stops.map((stop) => stop.toObject()) });
+    for (const stop of stops) {
+      stop.status = 'pending';
+      stop.updatedAt = null;
+    }
+    route.routeStops = stops;
+    route.stops = stops;
+    route.status = 'Active';
+    route.routeStatus = 'Active';
+    route.runStartedAt = now;
+    route.lastRunEndedAt = null;
+    await route.save();
+    return res.status(200).json({ success: true, route, message: 'Route reset and ready for another day.' });
+  } catch (error) {
+    console.error('Reset assigned route error:', error);
+    return res.status(500).json({ success: false, message: 'Unable to reset this route' });
   }
 };

@@ -4,6 +4,8 @@ import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/driver_provider.dart';
+import 'recycling_weigh_in_screen.dart';
+import 'widgets/driver_bottom_navigation_bar.dart';
 
 
 class TodayRouteScreen extends StatefulWidget {
@@ -41,6 +43,7 @@ class _TodayRouteScreenState extends State<TodayRouteScreen> {
     if (_routeIndex >= routes.length && routes.isNotEmpty) _routeIndex = 0;
     final route = routes.isEmpty ? null : routes[_routeIndex];
     final stops = _stops(route);
+    final routeEnded = route?['status']?.toString().toLowerCase() == 'completed';
     final position = provider.liveLocation;
     final center = position != null
         ? LatLng(position.latitude, position.longitude)
@@ -54,6 +57,9 @@ class _TodayRouteScreenState extends State<TodayRouteScreen> {
         backgroundColor: const Color(0xFF2E7D32),
         foregroundColor: Colors.white,
       ),
+      bottomNavigationBar: widget.showBottomNavigationBar
+          ? const DriverBottomNavigationBar(selectedIndex: 1)
+          : null,
       body: provider.isRoutesLoading
           ? const Center(child: CircularProgressIndicator())
           : routes.isEmpty
@@ -100,6 +106,12 @@ class _TodayRouteScreenState extends State<TodayRouteScreen> {
                       ),
                     ),
                     _StopList(route: route!, stops: stops, onTap: (stop) => _showStopActions(route, stop)),
+                    _RouteDayActions(
+                      ended: routeEnded,
+                      busy: provider.isRoutesLoading,
+                      onEnd: () => _endRoute(route, stops),
+                      onReset: () => _resetRoute(route),
+                    ),
                 ],
               ),
      
@@ -124,6 +136,7 @@ class _TodayRouteScreenState extends State<TodayRouteScreen> {
   }
 
   Future<void> _showStopActions(Map<String, dynamic> route, _RouteStop stop) async {
+    if (route['status']?.toString().toLowerCase() == 'completed') return;
     final status = await showModalBottomSheet<String>(
       context: context,
       builder: (sheetContext) => SafeArea(
@@ -155,11 +168,102 @@ class _TodayRouteScreenState extends State<TodayRouteScreen> {
     }
   }
 
+  Future<void> _endRoute(Map<String, dynamic> route, List<_RouteStop> stops) async {
+    final pending = stops.where((stop) => stop.status == 'pending').length;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('End today’s route?'),
+        content: Text(pending == 0
+            ? 'This saves today’s stop results and marks the route ready for drop-off at the recycling center.'
+            : '$pending stop${pending == 1 ? '' : 's'} are still pending. End the route and save today’s results for your recycling center drop-off?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Keep route open')),
+          FilledButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('End route')),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    final routeId = route['_id']?.toString() ?? '';
+    final ended = await context.read<DriverProvider>().endAssignedRoute(routeId);
+    if (!mounted) return;
+    if (ended) _driverProvider.stopLiveTracking();
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(ended ? 'Route ended. You can drop off the collected waste.' : 'Could not end this route. Please try again.'),
+    ));
+  }
+
+  Future<void> _resetRoute(Map<String, dynamic> route) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Reset route for another day?'),
+        content: const Text('Today’s stop results will be saved in route history, then all stops will be reopened.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('Reset route')),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    final routeId = route['_id']?.toString() ?? '';
+    final reset = await context.read<DriverProvider>().resetAssignedRoute(routeId);
+    if (!mounted) return;
+    if (reset) await _driverProvider.startLiveTracking();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(reset ? 'Route reset and ready for another day.' : 'Could not reset this route. Please try again.'),
+    ));
+  }
+
   Color _statusColor(String status) => switch (status) {
         'collected' => Colors.green,
         'skipped' => Colors.grey,
         _ => Colors.red,
       };
+}
+
+class _RouteDayActions extends StatelessWidget {
+  const _RouteDayActions({required this.ended, required this.busy, required this.onEnd, required this.onReset});
+  final bool ended;
+  final bool busy;
+  final VoidCallback onEnd;
+  final VoidCallback onReset;
+
+  @override
+  Widget build(BuildContext context) {
+    if (ended) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          const Text('Route ended · collected waste is ready for recycling center drop-off', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF2E7D32), fontWeight: FontWeight.w600)),
+          const SizedBox(height: 6),
+          Wrap(alignment: WrapAlignment.center, spacing: 8, children: [
+            OutlinedButton.icon(
+              onPressed: busy ? null : () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RecyclingWeighInScreen())),
+              icon: const Icon(Icons.scale_outlined), label: const Text('Record weigh-in'),
+            ),
+            FilledButton.icon(
+              onPressed: busy ? null : onReset,
+              icon: busy ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.restart_alt),
+              label: const Text('Reset for another day'),
+            ),
+          ]),
+        ]),
+      );
+    }
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+      child: SizedBox(
+        width: double.infinity,
+        child: FilledButton.icon(
+          onPressed: busy ? null : onEnd,
+          icon: busy ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.flag_outlined),
+          label: const Text('End route for today'),
+        ),
+      ),
+    );
+  }
 }
 
 class _RouteStop {

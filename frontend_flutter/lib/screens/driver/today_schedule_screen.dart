@@ -3,11 +3,13 @@ import 'package:provider/provider.dart';
 
 import '../../providers/driver_provider.dart';
 import 'pickup_detail_screen.dart';
+import 'widgets/driver_bottom_navigation_bar.dart';
 
 
 class TodayScheduleScreen extends StatefulWidget {
-  const TodayScheduleScreen({super.key, this.showBottomNavigationBar = true});
+  const TodayScheduleScreen({super.key, this.showBottomNavigationBar = true, this.initialTab = 0});
   final bool showBottomNavigationBar;
+  final int initialTab;
 
   @override
   State<TodayScheduleScreen> createState() => _TodayScheduleScreenState();
@@ -20,7 +22,7 @@ class _TodayScheduleScreenState extends State<TodayScheduleScreen>
   @override
   void initState() {
     super.initState();
-    _tabs = TabController(length: 2, vsync: this);
+    _tabs = TabController(length: 2, vsync: this, initialIndex: widget.initialTab.clamp(0, 1).toInt());
     WidgetsBinding.instance.addPostFrameCallback((_) => _refresh());
   }
 
@@ -61,6 +63,9 @@ class _TodayScheduleScreenState extends State<TodayScheduleScreen>
 
     return Scaffold(
       backgroundColor: const Color(0xFFF6F8F6),
+      bottomNavigationBar: widget.showBottomNavigationBar
+          ? const DriverBottomNavigationBar(selectedIndex: 2)
+          : null,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         backgroundColor: Colors.white,

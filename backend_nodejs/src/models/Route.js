@@ -36,6 +36,12 @@ const routeStopSchema = new mongoose.Schema(
   { _id: true }
 );
 
+const routeRunSchema = new mongoose.Schema({
+  startedAt: { type: Date, required: true },
+  endedAt: { type: Date, required: true },
+  stops: { type: [routeStopSchema], default: [] },
+}, { _id: false });
+
 const routeSchema = new mongoose.Schema(
   {
     routeName: {
@@ -120,6 +126,9 @@ const routeSchema = new mongoose.Schema(
       enum: ['Active', 'Inactive'],
       default: 'Active',
     },
+    runHistory: { type: [routeRunSchema], default: [] },
+    runStartedAt: { type: Date, default: Date.now },
+    lastRunEndedAt: { type: Date, default: null },
   },
   { timestamps: true }
 );

@@ -6,53 +6,36 @@ import '../../providers/driver_provider.dart';
 import '../profile/profile_screen.dart';
 import 'today_schedule_screen.dart';
 import 'today_route_screen.dart';
+import 'recycling_weigh_in_screen.dart';
+import 'pickup_detail_screen.dart';
+import '../../models/pickup_model.dart';
+import 'widgets/driver_bottom_navigation_bar.dart';
 
 class DriverDashboard extends StatefulWidget {
-  const DriverDashboard({super.key});
+  const DriverDashboard({super.key, this.initialIndex = 0});
+  final int initialIndex;
 
   @override
   State<DriverDashboard> createState() => _DriverDashboardState();
 }
 
 class _DriverDashboardState extends State<DriverDashboard> {
-  int _selectedIndex = 0;
+  late int _selectedIndex = widget.initialIndex.clamp(0, 4).toInt();
 
   @override
   Widget build(BuildContext context) {
     const pages = [
       _DriverHome(),
-      TodayRouteScreen(),
-      TodayScheduleScreen(),
+      TodayRouteScreen(showBottomNavigationBar: false),
+      TodayScheduleScreen(showBottomNavigationBar: false),
+      RecyclingWeighInScreen(showBottomNavigationBar: false),
       ProfileScreen(),
     ];
     return Scaffold(
       body: pages[_selectedIndex],
-      bottomNavigationBar: NavigationBar(
+      bottomNavigationBar: DriverBottomNavigationBar(
         selectedIndex: _selectedIndex,
         onDestinationSelected: (index) => setState(() => _selectedIndex = index),
-        indicatorColor: const Color(0xFFE8F5E9),
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.dashboard_outlined),
-            selectedIcon: Icon(Icons.dashboard),
-            label: 'Dashboard',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.alt_route_outlined),
-            selectedIcon: Icon(Icons.alt_route),
-            label: "Today's Route",
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.add_circle_outline),
-            selectedIcon: Icon(Icons.add_circle),
-            label: 'Assign',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
       ),
     );
   }
@@ -104,17 +87,17 @@ class _DriverHomeState extends State<_DriverHome> {
                     final compact = constraints.maxWidth < 380;
                     final cards = [
                       _MetricCard(
-                        label: 'Assigned',
+                        label: 'Assigned pickups',
                         value: '${provider.totalPickups}',
                         icon: Icons.assignment_outlined,
                       ),
                       _MetricCard(
-                        label: 'Completed',
+                        label: 'Completed pickups',
                         value: '${provider.completedPickups}',
                         icon: Icons.check_circle_outline,
                       ),
                       _MetricCard(
-                        label: 'Remaining',
+                        label: 'Remaining pickups',
                         value: '${provider.remainingPickups}',
                         icon: Icons.pending_actions_outlined,
                       ),
@@ -143,12 +126,9 @@ class _DriverHomeState extends State<_DriverHome> {
                   const SizedBox(height: 16),
                   _ProgressCard(provider: provider),
                   const SizedBox(height: 16),
-                  _CategoryCard(
-                    categories: provider.collectedByCategory,
-                    totalWeight: provider.totalCollectedWeight,
-                  ),
+                  _WeighInHistoryCard(totals: provider.weighInTotals, records: provider.weighInHistory),
                   const SizedBox(height: 16),
-                  _DailySummary(provider: provider),
+                  _SpecialRequestHistory(pickups: provider.specialRequestPickups),
                   const SizedBox(height: 16),
                   _TodayTasks(provider: provider),
                   if (provider.errorMessage != null) ...[
@@ -252,7 +232,7 @@ class _ProgressCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              '${provider.progressPercent}% complete · ${provider.completedPickups} of ${provider.totalPickups} pickups',
+              '${provider.progressPercent}% complete · ${provider.completedRouteStops} of ${provider.totalRouteStops} route stops',
             ),
           ],
         ),
@@ -360,7 +340,7 @@ class _TodayTasks extends StatelessWidget {
             const _SectionTitle("Today's pickup tasks"),
             const SizedBox(height: 8),
             if (provider.scheduleList.isEmpty)
-              const Text('No pickups assigned for today.')
+              const Text('No special-request pickups assigned for today.')
             else
               ...provider.scheduleList.map(
                 (pickup) => ListTile(
@@ -378,8 +358,23 @@ class _TodayTasks extends StatelessWidget {
                     '${pickup.wasteType} · ${pickup.weightKg.toStringAsFixed(1)} kg',
                   ),
                   trailing: Text(pickup.status),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => PickupDetailScreen(pickup: pickup)),
+                  ),
                 ),
               ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const TodayScheduleScreen(initialTab: 1)),
+                ),
+                icon: const Icon(Icons.open_in_new),
+                label: const Text('View today\'s other pickups'),
+              ),
+            ),
           ],
         ),
       ),
@@ -398,4 +393,114 @@ class _SectionTitle extends StatelessWidget {
       style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
     );
   }
+}
+
+class _StopSummaryCard extends StatelessWidget {
+  const _StopSummaryCard({required this.summary});
+  final Map<String, int> summary;
+
+  @override
+  Widget build(BuildContext context) => Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const _SectionTitle('Assigned route stops'),
+            const SizedBox(height: 8),
+            for (final item in const [('Assigned', 'assigned'), ('Completed', 'completed'), ('Remaining', 'remaining'), ('Collected', 'collected')])
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                  Text(item.$1), Text('${summary[item.$2] ?? 0}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                ]),
+              ),
+          ]),
+        ),
+      );
+}
+
+class _WeighInHistoryCard extends StatelessWidget {
+  const _WeighInHistoryCard({required this.totals, required this.records});
+  final Map<String, double> totals;
+  final List<Map<String, dynamic>> records;
+
+  @override
+  Widget build(BuildContext context) {
+    const labels = {'organic': 'Organic', 'plasticPaper': 'Plastic & paper', 'glassOthers': 'Glass & others'};
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const _SectionTitle('Recycling weights by category'),
+          const SizedBox(height: 8),
+          for (final entry in labels.entries)
+            ListTile(contentPadding: EdgeInsets.zero, title: Text(entry.value), trailing: Text('${(totals[entry.key] ?? 0).toStringAsFixed(1)} kg', style: const TextStyle(fontWeight: FontWeight.bold))),
+          const Divider(),
+          const Text('Weigh-in history', style: TextStyle(fontWeight: FontWeight.w600)),
+          if (records.isEmpty) const Padding(padding: EdgeInsets.only(top: 8), child: Text('No weigh-in records yet.')),
+          for (final record in records)
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.scale_outlined, color: Color(0xFF2E7D32)),
+              title: Text(_recordDate(record['recordedAt'] ?? record['createdAt'])),
+              subtitle: Text(_recordDetails(record)),
+              trailing: Text('${_recordTotal(record['weightsKg'])} kg'),
+            ),
+        ]),
+      ),
+    );
+  }
+
+  static String _recordTotal(dynamic weights) {
+    if (weights is! Map) return '0.0';
+    return weights.values.fold<double>(0, (sum, value) => sum + ((value as num?)?.toDouble() ?? 0)).toStringAsFixed(1);
+  }
+
+  static String _recordDetails(Map<String, dynamic> record) {
+    final weights = record['weightsKg'] is Map ? record['weightsKg'] as Map : const {};
+    final route = record['route'] is Map
+        ? (record['route']['routeName'] ?? record['route']['zone'])?.toString()
+        : null;
+    final lines = [
+      'Organic: ${((weights['organic'] as num?)?.toDouble() ?? 0).toStringAsFixed(1)} kg',
+      'Plastic & paper: ${((weights['plasticPaper'] as num?)?.toDouble() ?? 0).toStringAsFixed(1)} kg',
+      'Glass & others: ${((weights['glassOthers'] as num?)?.toDouble() ?? 0).toStringAsFixed(1)} kg',
+    ];
+    final context = route?.isNotEmpty == true
+        ? route!
+        : record['notes']?.toString().trim().isNotEmpty == true
+            ? record['notes'].toString().trim()
+            : 'End of day weigh-in';
+    return '$context\n${lines.join(' · ')}';
+  }
+
+  static String _recordDate(dynamic raw) {
+    final date = DateTime.tryParse(raw?.toString() ?? '')?.toLocal();
+    if (date == null) return 'Recorded weigh-in';
+    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  }
+}
+
+class _SpecialRequestHistory extends StatelessWidget {
+  const _SpecialRequestHistory({required this.pickups});
+  final List<PickupModel> pickups;
+
+  @override
+  Widget build(BuildContext context) => Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const _SectionTitle('Special-request pickup history'),
+            if (pickups.isEmpty) const Padding(padding: EdgeInsets.only(top: 10), child: Text('No special-request pickups yet.')),
+            for (final pickup in pickups)
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(pickup.customerName, style: const TextStyle(fontWeight: FontWeight.w600)),
+                subtitle: Text('${pickup.address}\n${pickup.pickupNumber} · ${pickup.status}'),
+                isThreeLine: true,
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => PickupDetailScreen(pickup: pickup))),
+              ),
+          ]),
+        ),
+      );
 }
