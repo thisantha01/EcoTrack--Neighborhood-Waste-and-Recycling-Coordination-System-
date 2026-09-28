@@ -58,17 +58,28 @@ class _MapLocationPickerScreenState extends State<MapLocationPickerScreen> {
   void _onMapTap(TapPosition tapPosition, LatLng latLng) {
     setState(() {
       _selectedPoint = latLng;
+      final currentText = _labelCtrl.text.trim();
+      if (currentText.isEmpty ||
+          currentText.startsWith('Near ') ||
+          currentText.startsWith('Current location') ||
+          currentText.startsWith('Map location')) {
+        _labelCtrl.text =
+            'Near ${latLng.latitude.toStringAsFixed(4)}, ${latLng.longitude.toStringAsFixed(4)}';
+      }
     });
   }
 
   void _confirm() {
     if (_selectedPoint == null) return;
+    final text = _labelCtrl.text.trim();
     Navigator.pop(
       context,
       PickedLocation(
         lat: _selectedPoint!.latitude,
         lng: _selectedPoint!.longitude,
-        label: _labelCtrl.text.trim().isNotEmpty ? _labelCtrl.text.trim() : null,
+        label: text.isNotEmpty
+            ? text
+            : 'Near ${_selectedPoint!.latitude.toStringAsFixed(4)}, ${_selectedPoint!.longitude.toStringAsFixed(4)}',
       ),
     );
   }
@@ -103,7 +114,7 @@ class _MapLocationPickerScreenState extends State<MapLocationPickerScreen> {
           FlutterMap(
             options: MapOptions(
               initialCenter: _selectedPoint ?? _defaultCentre,
-              initialZoom: 14,
+              initialZoom: _selectedPoint != null ? 17.5 : 14.0,
               onTap: _onMapTap,
             ),
             children: [

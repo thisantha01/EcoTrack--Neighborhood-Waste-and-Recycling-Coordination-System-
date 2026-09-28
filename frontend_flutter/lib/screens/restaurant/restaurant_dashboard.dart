@@ -9,6 +9,8 @@ import '../community/my_requests_screen.dart';
 import '../community/neighbourhood_screen.dart';
 import '../community/engagement_screen.dart';
 import '../profile/profile_screen.dart';
+import '../community/widgets/notification_bell_button.dart';
+import '../neighbour/widgets/home_route_map_section.dart';
 
 class RestaurantDashboard extends StatefulWidget {
   const RestaurantDashboard({super.key});
@@ -21,11 +23,15 @@ class _RestaurantDashboardState extends State<RestaurantDashboard> {
   int _selectedIndex = 0;
 
   void _goToCommunity() => setState(() => _selectedIndex = 3);
+  void _goToRequests() => setState(() => _selectedIndex = 2);
 
   @override
   Widget build(BuildContext context) {
     final List<Widget> pages = [
-      _RestaurantHome(onGoToCommunity: _goToCommunity),
+      _RestaurantHome(
+        onGoToCommunity: _goToCommunity,
+        onGoToRequests: _goToRequests,
+      ),
       const CommunityReportsScreen(),
       const MyRequestsScreen(),
       const CommunityHubScreen(),
@@ -74,8 +80,12 @@ class _RestaurantDashboardState extends State<RestaurantDashboard> {
 
 class _RestaurantHome extends StatelessWidget {
   final VoidCallback onGoToCommunity;
+  final VoidCallback onGoToRequests;
 
-  const _RestaurantHome({required this.onGoToCommunity});
+  const _RestaurantHome({
+    required this.onGoToCommunity,
+    required this.onGoToRequests,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -88,6 +98,9 @@ class _RestaurantHome extends StatelessWidget {
         foregroundColor: Colors.white,
         title: const Text('EcoTrack',
             style: TextStyle(fontWeight: FontWeight.bold)),
+        actions: const [
+          NotificationBellButton(),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -142,7 +155,12 @@ class _RestaurantHome extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
+
+            // ── Today's Waste Collection Route Map & Schedule Card ─────
+            HomeRouteMapSection(onGoToRequests: onGoToRequests),
+
+            const SizedBox(height: 10),
             const Text('Quick Actions',
                 style:
                     TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
