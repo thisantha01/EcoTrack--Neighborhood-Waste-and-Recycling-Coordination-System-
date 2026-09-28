@@ -113,4 +113,47 @@ collectionRequestSchema.index({ requester: 1, createdAt: -1 });
 collectionRequestSchema.index({ status: 1 });
 collectionRequestSchema.index({ assignedDriver: 1 });
 
+// Notification Trigger: Detect status transition to 'accepted'
+collectionRequestSchema.pre('save', function (next) {
+  if (this.isModified('status') && this.status === 'accepted') {
+    this._wasJustAccepted = true;
+  }
+  next();
+});
+
+collectionRequestSchema.post('save', async function (doc) {
+  if (doc._wasJustAccepted) {
+    try {
+      const Notification = require('./Notification');
+      const wasteType =
+        doc.wasteType ||
+        (Array.isArray(doc.wasteTypes) && doc.wasteTypes.length > 0
+          ? doc.wasteTypes.join(', ')
+          : 'waste');
+      const qty = doc.estimatedQuantity ? `${doc.estimatedQuantity} kg` : '';
+
+      await Notification.create({
+        recipient: doc.requester,
+        title: 'Collection Request Accepted! ✅',
+        message: `Your collection request for ${wasteType} ${qty ? `(${qty})` : ''} at ${doc.location || 'your location'} has been accepted and confirmed.`,
+        type: 'request_accepted',
+        relatedId: doc._id,
+        metadata: {
+          requestId: doc._id,
+          wasteType: doc.wasteType,
+          wasteTypes: doc.wasteTypes,
+          estimatedQuantity: doc.estimatedQuantity,
+          location: doc.location,
+          preferredDate: doc.preferredDate,
+          preferredTime: doc.preferredTime,
+          status: 'accepted',
+          acceptedAt: new Date(),
+        },
+      });
+    } catch (err) {
+      console.error('Error generating request acceptance notification:', err);
+    }
+  }
+});
+
 module.exports = mongoose.model('CollectionRequest', collectionRequestSchema);

@@ -8,6 +8,8 @@ import '../community/community_reports_screen.dart';
 import '../community/my_requests_screen.dart';
 import '../community/engagement_screen.dart';
 import '../profile/profile_screen.dart';
+import '../community/widgets/notification_bell_button.dart';
+import 'widgets/home_route_map_section.dart';
 
 class NeighbourDashboard extends StatefulWidget {
   const NeighbourDashboard({super.key});
@@ -19,14 +21,16 @@ class NeighbourDashboard extends StatefulWidget {
 class _NeighbourDashboardState extends State<NeighbourDashboard> {
   int _selectedIndex = 0;
 
-  // We keep the hub index so the nav bar stays correct,
-  // but expose a callback so Home can switch to Community tab.
   void _goToCommunity() => setState(() => _selectedIndex = 3);
+  void _goToRequests() => setState(() => _selectedIndex = 2);
 
   @override
   Widget build(BuildContext context) {
     final List<Widget> pages = [
-      _NeighbourHome(onGoToCommunity: _goToCommunity),
+      _NeighbourHome(
+        onGoToCommunity: _goToCommunity,
+        onGoToRequests: _goToRequests,
+      ),
       const CommunityReportsScreen(),
       const MyRequestsScreen(),
       const CommunityHubScreen(),
@@ -78,8 +82,12 @@ class _NeighbourDashboardState extends State<NeighbourDashboard> {
 // ─────────────────────────────────────────────────────────
 class _NeighbourHome extends StatelessWidget {
   final VoidCallback onGoToCommunity;
+  final VoidCallback onGoToRequests;
 
-  const _NeighbourHome({required this.onGoToCommunity});
+  const _NeighbourHome({
+    required this.onGoToCommunity,
+    required this.onGoToRequests,
+  });
 
   void _openFeed(BuildContext context) {
     Navigator.push(
@@ -123,10 +131,7 @@ class _NeighbourHome extends StatelessWidget {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_outlined),
-            onPressed: () {},
-          ),
+          const NotificationBellButton(),
         ],
       ),
       body: SingleChildScrollView(
@@ -188,7 +193,10 @@ class _NeighbourHome extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // ── Today's Waste Collection Schedule Card ─────
+            // ── Today's Waste Collection Route Map & Schedule Card ─────
+            HomeRouteMapSection(onGoToRequests: onGoToRequests),
+
+            // ── Today's Waste Collection Schedule Card (Weekly Guide) ─────
             const _WasteCollectionNoticeCard(),
 
             const SizedBox(height: 20),
