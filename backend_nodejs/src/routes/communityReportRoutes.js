@@ -4,6 +4,7 @@ const {
   getReports,
   getReport,
   createReport,
+  updateReport,
   toggleUpvote,
   addAdditionalInfo,
   updateReportStatus,
@@ -14,6 +15,7 @@ const router = express.Router();
 router.get('/', protect, getReports);
 router.get('/:id', protect, getReport);
 router.post('/', protect, createReport);
+router.put('/:id', protect, updateReport);
 router.post('/:id/upvote', protect, toggleUpvote);
 router.post('/:id/info', protect, addAdditionalInfo);
 router.put('/:id/status', protect, updateReportStatus);
