@@ -265,6 +265,70 @@ const updateReportStatus = async (req, res) => {
 
 
 // =====================================================
+// UPDATE REPORT (reporter only, active reports only)
+// =====================================================
+
+const updateReport = async (req, res) => {
+  try {
+    const { title, description, location, coordinates, imageUrl, type } = req.body;
+    const report = await CommunityReport.findById(req.params.id);
+
+    if (!report) {
+      return res.status(404).json({
+        success: false,
+        message: 'Report not found',
+      });
+    }
+
+    // Ownership check: Only reporter or manager can edit
+    if (report.reporter.toString() !== req.user._id.toString() && req.user.role !== 'recycling_manager') {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to edit this report',
+      });
+    }
+
+    // Status check: Cannot edit resolved reports
+    if (report.status === 'resolved') {
+      return res.status(400).json({
+        success: false,
+        message: 'Resolved reports cannot be edited',
+      });
+    }
+
+    if (title && title.trim()) report.title = title.trim();
+    if (description && description.trim()) report.description = description.trim();
+    if (location && location.trim()) report.location = location.trim();
+    if (coordinates) report.coordinates = coordinates;
+    if (imageUrl !== undefined) report.imageUrl = imageUrl;
+    if (type) report.type = type;
+
+    report.statusHistory.push({
+      status: report.status,
+      note: 'Report details edited by user',
+    });
+
+    await report.save();
+    await report.populate('reporter', 'name profilePicture role');
+    await report.populate('additionalInfo.user', 'name profilePicture');
+    await report.populate('upvotes', 'name');
+
+    return res.status(200).json({
+      success: true,
+      message: 'Report updated successfully',
+      report,
+    });
+  } catch (error) {
+    console.error('Update report error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Unable to update report',
+    });
+  }
+};
+
+
+// =====================================================
 // EXPORT
 // =====================================================
 
@@ -272,6 +336,7 @@ module.exports = {
   getReports,
   getReport,
   createReport,
+  updateReport,
   toggleUpvote,
   addAdditionalInfo,
   updateReportStatus,
