@@ -4,11 +4,14 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart';
+import '../../models/community_report_model.dart';
 import '../../services/community_report_service.dart';
 import 'map_location_picker_screen.dart';
 
 class IllegalDumpingReportScreen extends StatefulWidget {
-  const IllegalDumpingReportScreen({super.key});
+  final CommunityReport? initialReport;
+
+  const IllegalDumpingReportScreen({super.key, this.initialReport});
 
   @override
   State<IllegalDumpingReportScreen> createState() =>
@@ -27,6 +30,23 @@ class _IllegalDumpingReportScreenState
   double? _pickedLat;
   double? _pickedLng;
   bool _submitting = false;
+
+  bool get _isEditing => widget.initialReport != null;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialReport != null) {
+      final r = widget.initialReport!;
+      _titleCtrl.text = r.title;
+      _descCtrl.text = r.description;
+      _locationCtrl.text = r.location;
+      _type = r.type;
+      _imageUrl = r.imageUrl;
+      _pickedLat = r.lat;
+      _pickedLng = r.lng;
+    }
+  }
 
   @override
   void dispose() {
@@ -235,22 +255,38 @@ class _IllegalDumpingReportScreenState
 
     setState(() => _submitting = true);
     try {
-      await CommunityReportService().createReport(
-        title: _titleCtrl.text.trim(),
-        description: _descCtrl.text.trim(),
-        location: _locationCtrl.text.trim(),
-        type: _type,
-        imageUrl: _imageUrl,
-        coordinates: _pickedLat != null && _pickedLng != null
-            ? {'lat': _pickedLat!, 'lng': _pickedLng!}
-            : null,
-      );
+      if (_isEditing) {
+        await CommunityReportService().updateReport(
+          widget.initialReport!.id,
+          title: _titleCtrl.text.trim(),
+          description: _descCtrl.text.trim(),
+          location: _locationCtrl.text.trim(),
+          type: _type,
+          imageUrl: _imageUrl,
+          coordinates: _pickedLat != null && _pickedLng != null
+              ? {'lat': _pickedLat!, 'lng': _pickedLng!}
+              : null,
+        );
+      } else {
+        await CommunityReportService().createReport(
+          title: _titleCtrl.text.trim(),
+          description: _descCtrl.text.trim(),
+          location: _locationCtrl.text.trim(),
+          type: _type,
+          imageUrl: _imageUrl,
+          coordinates: _pickedLat != null && _pickedLng != null
+              ? {'lat': _pickedLat!, 'lng': _pickedLng!}
+              : null,
+        );
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Report submitted successfully'),
-            backgroundColor: Color(0xFF2E7D32),
+          SnackBar(
+            content: Text(_isEditing
+                ? '✅ Report updated successfully'
+                : '✅ Report submitted successfully'),
+            backgroundColor: const Color(0xFF2E7D32),
           ),
         );
         Navigator.pop(context, true);
@@ -274,8 +310,10 @@ class _IllegalDumpingReportScreenState
       appBar: AppBar(
         backgroundColor: const Color(0xFFD32F2F),
         foregroundColor: Colors.white,
-        title: const Text('🚨 Report Illegal Dumping',
-            style: TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(
+          _isEditing ? '✏️ Edit Report' : '🚨 Report Illegal Dumping',
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -293,15 +331,16 @@ class _IllegalDumpingReportScreenState
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: const Color(0xFFD32F2F).withAlpha(60)),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Icons.info_outline, color: Color(0xFFD32F2F), size: 20),
-                    SizedBox(width: 10),
+                    const Icon(Icons.info_outline, color: Color(0xFFD32F2F), size: 20),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        'Help keep the community clean by reporting illegal dumping. '
-                        'Provide as much detail as possible.',
-                        style: TextStyle(fontSize: 13, color: Colors.black87),
+                        _isEditing
+                            ? 'Update the details for this report. Your changes will be reflected in the community system.'
+                            : 'Help keep the community clean by reporting illegal dumping. Provide as much detail as possible.',
+                        style: const TextStyle(fontSize: 13, color: Colors.black87),
                       ),
                     ),
                   ],
@@ -432,9 +471,10 @@ class _IllegalDumpingReportScreenState
                     width: double.infinity,
                     child: IgnorePointer(
                       child: FlutterMap(
+                        key: ValueKey('preview_${_pickedLat}_$_pickedLng'),
                         options: MapOptions(
                           initialCenter: LatLng(_pickedLat!, _pickedLng!),
-                          initialZoom: 16,
+                          initialZoom: 18.0,
                           interactionOptions: const InteractionOptions(
                             flags: InteractiveFlag.none,
                           ),
@@ -541,9 +581,9 @@ class _IllegalDumpingReportScreenState
                           child: CircularProgressIndicator(
                               color: Colors.white, strokeWidth: 2),
                         )
-                      : const Text(
-                          'Submit Report',
-                          style: TextStyle(
+                      : Text(
+                          _isEditing ? 'Save Changes' : 'Submit Report',
+                          style: const TextStyle(
                               fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                 ),
