@@ -12,6 +12,25 @@ const {
 } = require('../services/emailService');
 
 
+// Helper to serialize user profile with locationCoordinates
+const formatUserResponse = (user) => ({
+  id: user._id,
+  name: user.name,
+  email: user.email,
+  phone: user.phone || '',
+  role: user.role,
+  isVerified: user.isVerified,
+  location: user.location || '',
+  locationCoordinates: user.locationCoordinates || { lat: null, lng: null },
+  liveLocation: user.liveLocation || null,
+  profilePicture: user.profilePicture || null,
+  bio: user.bio || '',
+  restaurantName: user.restaurantName || '',
+  restaurantAddress: user.restaurantAddress || '',
+  licenseNumber: user.licenseNumber || '',
+  vehicleType: user.vehicleType || '',
+});
+
 // =====================================================
 // REGISTER
 // =====================================================
@@ -24,6 +43,9 @@ const register = async (req, res) => {
       phone,
       password,
       role,
+      location,
+      locationCoordinates,
+      restaurantName,
     } = req.body;
 
     // Validate required fields
@@ -79,6 +101,10 @@ const register = async (req, res) => {
           Date.now() + 10 * 60 * 1000
         );
 
+      if (location) user.location = location;
+      if (locationCoordinates) user.locationCoordinates = locationCoordinates;
+      if (restaurantName) user.restaurantName = restaurantName;
+
       await user.save();
 
       await sendVerificationOtp(
@@ -109,6 +135,9 @@ const register = async (req, res) => {
       phone: phone || '',
       password: hashedPassword,
       role,
+      location: location || '',
+      locationCoordinates: locationCoordinates || { lat: null, lng: null },
+      restaurantName: restaurantName || '',
       isVerified: false,
       otp,
       otpExpiresAt:
@@ -241,14 +270,7 @@ const verifyOtp = async (req, res) => {
       message:
         'Email verified successfully',
       token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        role: user.role,
-        isVerified: user.isVerified,
-      },
+      user: formatUserResponse(user),
     });
 
   } catch (error) {
@@ -400,14 +422,7 @@ const login = async (req, res) => {
       message: 'Login successful',
       token,
 
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        role: user.role,
-        isVerified: user.isVerified,
-      },
+      user: formatUserResponse(user),
     });
 
   } catch (error) {
@@ -434,14 +449,7 @@ const getMe = async (req, res) => {
     return res.status(200).json({
       success: true,
 
-      user: {
-        id: req.user._id,
-        name: req.user.name,
-        email: req.user.email,
-        phone: req.user.phone,
-        role: req.user.role,
-        isVerified: req.user.isVerified,
-      },
+      user: formatUserResponse(req.user),
     });
 
   } catch (error) {

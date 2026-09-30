@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/auth_provider.dart';
 import '../../utils/validators.dart';
+import '../profile/map_picker_screen.dart';
 import 'otp_verification_screen.dart';
 import 'widgets/auth_button.dart';
 import 'widgets/auth_text_field.dart';
@@ -38,7 +40,11 @@ class _RegisterScreenState
   final locationController =
       TextEditingController();
 
+  final restaurantNameController =
+      TextEditingController();
+
   String? selectedRole;
+  LatLng? _selectedCoordinates;
 
   @override
   void dispose() {
@@ -48,6 +54,7 @@ class _RegisterScreenState
     confirmPasswordController.dispose();
     phoneController.dispose();
     locationController.dispose();
+    restaurantNameController.dispose();
 
     super.dispose();
   }
@@ -68,6 +75,15 @@ class _RegisterScreenState
       phone: phoneController.text.trim(),
       role: selectedRole!,
       location: locationController.text.trim(),
+      locationCoordinates: _selectedCoordinates != null
+          ? {
+              'lat': _selectedCoordinates!.latitude,
+              'lng': _selectedCoordinates!.longitude,
+            }
+          : null,
+      restaurantName: selectedRole == 'restaurant_owner'
+          ? restaurantNameController.text.trim()
+          : null,
     );
 
     if (!mounted) return;
@@ -209,17 +225,141 @@ class _RegisterScreenState
                   },
                 ),
 
+                if (selectedRole == 'restaurant_owner') ...[
+                  const SizedBox(height: 16),
+                  AuthTextField(
+                    controller: restaurantNameController,
+                    label: 'Restaurant Name',
+                    hint: 'Enter your restaurant name',
+                    icon: Icons.restaurant,
+                    validator: (value) =>
+                        Validators.required(
+                      value,
+                      'Restaurant name',
+                    ),
+                  ),
+                ],
+
                 const SizedBox(height: 16),
 
                 AuthTextField(
                   controller: locationController,
-                  label: 'Location',
-                  hint: 'Enter your location',
+                  label: selectedRole == 'restaurant_owner'
+                      ? 'Restaurant Address'
+                      : 'Living Address / Area',
+                  hint: 'e.g. 142/A Kaduwela Road, Malabe',
                   icon: Icons.location_on,
                   validator: (value) =>
                       Validators.required(
                     value,
                     'Location',
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
+                // Interactive Map Location Picker
+                InkWell(
+                  onTap: () async {
+                    final result = await Navigator.push<LatLng>(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => MapPickerScreen(
+                          initialLat: _selectedCoordinates?.latitude,
+                          initialLng: _selectedCoordinates?.longitude,
+                        ),
+                      ),
+                    );
+                    if (result != null) {
+                      setState(() {
+                        _selectedCoordinates = result;
+                        if (locationController.text.trim().isEmpty) {
+                          locationController.text =
+                              'Pinned (${result.latitude.toStringAsFixed(4)}, ${result.longitude.toStringAsFixed(4)})';
+                        }
+                      });
+                    }
+                  },
+                  borderRadius: BorderRadius.circular(14),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: _selectedCoordinates != null
+                          ? const Color(0xFFE8F5E9)
+                          : Colors.grey.shade50,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: _selectedCoordinates != null
+                            ? const Color(0xFF2E7D32)
+                            : Colors.grey.shade300,
+                        width: _selectedCoordinates != null ? 1.8 : 1.0,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          _selectedCoordinates != null
+                              ? Icons.check_circle
+                              : Icons.pin_drop_outlined,
+                          color: _selectedCoordinates != null
+                              ? const Color(0xFF2E7D32)
+                              : const Color(0xFF1565C0),
+                          size: 26,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _selectedCoordinates != null
+                                    ? 'Map Location Marked ✓'
+                                    : (selectedRole == 'restaurant_owner'
+                                        ? 'Mark Restaurant on Map'
+                                        : 'Mark House on Map'),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                  color: _selectedCoordinates != null
+                                      ? const Color(0xFF2E7D32)
+                                      : Colors.black87,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                _selectedCoordinates != null
+                                    ? '${_selectedCoordinates!.latitude.toStringAsFixed(5)}, ${_selectedCoordinates!.longitude.toStringAsFixed(5)}'
+                                    : 'Tap to pinpoint on interactive map for waste routing',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: _selectedCoordinates != null
+                                      ? const Color(0xFF2E7D32)
+                                      : Colors.grey.shade600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: _selectedCoordinates != null
+                                ? const Color(0xFF2E7D32)
+                                : const Color(0xFF1565C0),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            _selectedCoordinates != null ? 'Change' : 'Choose Map',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
 

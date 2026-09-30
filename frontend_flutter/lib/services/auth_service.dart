@@ -15,18 +15,24 @@ class AuthService {
     required String phone,
     required String role,
     required String location,
+    Map<String, dynamic>? locationCoordinates,
+    String? restaurantName,
   }) async {
-    return await _apiService.post(
-      ApiConfig.register,
-      {
-        'name': name,
-        'email': email,
-        'password': password,
-        'phone': phone,
-        'role': role,
-        'location': location,
-      },
-    );
+    final payload = <String, dynamic>{
+      'name': name,
+      'email': email,
+      'password': password,
+      'phone': phone,
+      'role': role,
+      'location': location,
+    };
+    if (locationCoordinates != null) {
+      payload['locationCoordinates'] = locationCoordinates;
+    }
+    if (restaurantName != null && restaurantName.isNotEmpty) {
+      payload['restaurantName'] = restaurantName;
+    }
+    return await _apiService.post(ApiConfig.register, payload);
   }
 
   Future<Map<String, dynamic>> verifyOtp({
