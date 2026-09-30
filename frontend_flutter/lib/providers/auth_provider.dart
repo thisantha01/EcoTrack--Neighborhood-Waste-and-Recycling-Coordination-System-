@@ -66,6 +66,8 @@ class AuthProvider extends ChangeNotifier {
     required String phone,
     required String role,
     required String location,
+    Map<String, dynamic>? locationCoordinates,
+    String? restaurantName,
   }) async {
     _setLoading(true);
     _error = null;
@@ -78,6 +80,8 @@ class AuthProvider extends ChangeNotifier {
         phone: phone,
         role: role,
         location: location,
+        locationCoordinates: locationCoordinates,
+        restaurantName: restaurantName,
       );
 
       return true;
