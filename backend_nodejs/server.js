@@ -23,6 +23,7 @@ const managerRoutes = require('./src/routes/managerRoutes');
 const routeRoutes = require('./src/routes/route.routes');
 const collectionRequestRoutes = require('./src/routes/collectionRequestRoutes');
 const driverRoutes = require('./src/routes/driverRoutes');
+const notificationRoutes = require('./src/routes/notificationRoutes');
 
 
 const app = express();
@@ -79,9 +80,10 @@ app.use('/api/community/reports', communityReportRoutes);
 app.use('/api/community/engagement', engagementRoutes);
 
 app.use('/api/collection-requests', collectionRequestRoutes);
-app.use('/api/manager', managerRoutes);
 app.use('/api/manager/routes', routeRoutes);
+app.use('/api/manager', managerRoutes);
 app.use('/api/driver', driverRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 
 // =====================================================

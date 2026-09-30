@@ -110,4 +110,10 @@ class ApiConfig {
   // Driver fixed routes
   static String get driverRoutes => '$baseUrl/driver/routes';
   static String get publicRouteSchedule => '$baseUrl/manager/routes/schedule';
+
+  // Notifications
+  static String get notifications => '$baseUrl/notifications';
+  static String get notificationsReadAll => '$baseUrl/notifications/read-all';
+  static String notificationMarkRead(String id) => '$baseUrl/notifications/$id/read';
+  static String notificationDelete(String id) => '$baseUrl/notifications/$id';
 }

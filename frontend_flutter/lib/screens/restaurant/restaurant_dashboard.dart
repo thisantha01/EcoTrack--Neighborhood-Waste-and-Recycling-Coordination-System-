@@ -96,11 +96,11 @@ class _RestaurantHome extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: const Color(0xFFE65100),
         foregroundColor: Colors.white,
-        title: const Text('EcoTrack',
-            style: TextStyle(fontWeight: FontWeight.bold)),
-        actions: const [
-          NotificationBellButton(),
-        ],
+        title: const Text(
+          'EcoTrack',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        actions: const [NotificationBellButton()],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -122,8 +122,10 @@ class _RestaurantHome extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Restaurant Owner 🍽️',
-                      style: TextStyle(color: Colors.white70, fontSize: 14)),
+                  const Text(
+                    'Restaurant Owner 🍽️',
+                    style: TextStyle(color: Colors.white70, fontSize: 14),
+                  ),
                   const SizedBox(height: 4),
                   Text(
                     user?.name ?? 'Owner',
@@ -135,21 +137,31 @@ class _RestaurantHome extends StatelessWidget {
                   ),
                   if (user?.restaurantName?.isNotEmpty ?? false) ...[
                     const SizedBox(height: 4),
-                    Text(user!.restaurantName!,
-                        style: const TextStyle(
-                            color: Colors.white70, fontSize: 13)),
+                    Text(
+                      user!.restaurantName!,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 13,
+                      ),
+                    ),
                   ],
                   const SizedBox(height: 14),
                   OutlinedButton.icon(
                     onPressed: onGoToCommunity,
-                    icon: const Icon(Icons.people,
-                        color: Colors.white, size: 18),
-                    label: const Text('Community Hub',
-                        style: TextStyle(color: Colors.white)),
+                    icon: const Icon(
+                      Icons.people,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                    label: const Text(
+                      'Community Hub',
+                      style: TextStyle(color: Colors.white),
+                    ),
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: Colors.white54),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20)),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
                     ),
                   ),
                 ],
@@ -161,9 +173,10 @@ class _RestaurantHome extends StatelessWidget {
             HomeRouteMapSection(onGoToRequests: onGoToRequests),
 
             const SizedBox(height: 10),
-            const Text('Quick Actions',
-                style:
-                    TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text(
+              'Quick Actions',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 12),
             GridView.count(
               shrinkWrap: true,
@@ -181,7 +194,8 @@ class _RestaurantHome extends StatelessWidget {
                   () => Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (_) => const CommunityFeedScreen()),
+                      builder: (_) => const CommunityFeedScreen(),
+                    ),
                   ),
                 ),
                 _buildCard(
@@ -192,7 +206,8 @@ class _RestaurantHome extends StatelessWidget {
                   () => Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (_) => const CleanupEventsScreen()),
+                      builder: (_) => const CleanupEventsScreen(),
+                    ),
                   ),
                 ),
                 _buildCard(
@@ -203,7 +218,8 @@ class _RestaurantHome extends StatelessWidget {
                   () => Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (_) => const NeighbourhoodScreen()),
+                      builder: (_) => const NeighbourhoodScreen(),
+                    ),
                   ),
                 ),
                 _buildCard(
@@ -213,8 +229,7 @@ class _RestaurantHome extends StatelessWidget {
                   const Color(0xFFE65100),
                   () => Navigator.push(
                     context,
-                    MaterialPageRoute(
-                        builder: (_) => const EngagementScreen()),
+                    MaterialPageRoute(builder: (_) => const EngagementScreen()),
                   ),
                 ),
               ],
@@ -249,12 +264,15 @@ class _RestaurantHome extends StatelessWidget {
             children: [
               Icon(icon, color: color, size: 36),
               const SizedBox(height: 8),
-              Text(label,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      color: color,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13)),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
             ],
           ),
         ),
