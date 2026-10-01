@@ -108,7 +108,7 @@ class ManagerProvider extends ChangeNotifier {
         wasteType: _filterWasteType,
         date: _filterDate,
         page: _currentPage,
-        limit: 50,
+        limit: 20,
       );
 
       final List<dynamic> requestData = response['requests'] ?? [];
