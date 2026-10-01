@@ -154,14 +154,19 @@ const getCollectionRequests = async (req, res) => {
     const limitNum = parseInt(limit) || 20;
     const skip = (pageNum - 1) * limitNum;
 
-    const requests = await CollectionRequest.find(filter)
+    const requestsQuery = CollectionRequest.find(filter)
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limitNum)
       .populate('requester', 'name email phone location')
-      .populate('assignedDriver', 'name phone vehicleType');
+      .populate('assignedDriver', 'name phone vehicleType')
+      .lean();
 
-    const total = await CollectionRequest.countDocuments(filter);
+    // Fetch the page and its total together instead of waiting for two DB round trips.
+    const [requests, total] = await Promise.all([
+      requestsQuery.exec(),
+      CollectionRequest.countDocuments(filter),
+    ]);
 
     return res.status(200).json({
       success: true,

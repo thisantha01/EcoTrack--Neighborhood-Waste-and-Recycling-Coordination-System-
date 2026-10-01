@@ -110,6 +110,7 @@ const collectionRequestSchema = new mongoose.Schema({
 });
 
 collectionRequestSchema.index({ requester: 1, createdAt: -1 });
+collectionRequestSchema.index({ createdAt: -1 });
 collectionRequestSchema.index({ status: 1 });
 collectionRequestSchema.index({ assignedDriver: 1 });
 

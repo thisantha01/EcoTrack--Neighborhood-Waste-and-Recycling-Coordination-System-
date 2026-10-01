@@ -6,8 +6,8 @@ import 'package:http/http.dart' as http;
 import 'storage_service.dart';
 
 class ApiService {
-  // 10-second timeout for all requests
-  static const _timeout = Duration(seconds: 10);
+  // Allow slower collection request queries to complete.
+  static const _timeout = Duration(seconds: 30);
 
   Future<Map<String, dynamic>> post(
     String url,
