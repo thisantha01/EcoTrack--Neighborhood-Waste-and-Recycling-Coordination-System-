@@ -104,7 +104,41 @@ const collectionRequestSchema = new mongoose.Schema({
       type: Date,
       default: null
     }
-  }
+  },
+  // Waste Processing fields (added for Waste Management)
+  processingStatus: {
+    type: String,
+    enum: ['received', 'sorted', 'recyclable', 'non_recyclable', 'processed', 'recycled', 'disposed'],
+    default: null,
+  },
+  recyclableStatus: {
+    type: String,
+    enum: ['recyclable', 'non_recyclable', null],
+    default: null,
+  },
+  recycledQuantity: {
+    type: Number,
+    min: 0,
+    default: null,
+  },
+  disposedQuantity: {
+    type: Number,
+    min: 0,
+    default: null,
+  },
+  sortedAt: {
+    type: Date,
+    default: null,
+  },
+  processedAt: {
+    type: Date,
+    default: null,
+  },
+  processedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null,
+  },
 }, {
   timestamps: true
 });
@@ -113,6 +147,8 @@ collectionRequestSchema.index({ requester: 1, createdAt: -1 });
 collectionRequestSchema.index({ createdAt: -1 });
 collectionRequestSchema.index({ status: 1 });
 collectionRequestSchema.index({ assignedDriver: 1 });
+collectionRequestSchema.index({ processingStatus: 1 });
+collectionRequestSchema.index({ 'status': 1, 'processingStatus': 1 });
 
 // Notification Trigger: Detect status transition to 'accepted'
 collectionRequestSchema.pre('save', function (next) {

@@ -250,4 +250,82 @@ class ManagerService {
         : baseUri;
     return await _apiService.get(uri.toString(), authenticated: true);
   }
+
+  // =====================================================
+  // WASTE MANAGEMENT
+  // =====================================================
+
+  /// Get driver weigh-in records (end-of-day forms)
+  Future<Map<String, dynamic>> getWasteWeighIns({
+    int page = 1,
+    int limit = 20,
+    String? startDate,
+    String? endDate,
+    String? driverId,
+  }) async {
+    final queryParams = <String, String>{
+      'page': page.toString(),
+      'limit': limit.toString(),
+    };
+    if (startDate != null && startDate.isNotEmpty) queryParams['startDate'] = startDate;
+    if (endDate != null && endDate.isNotEmpty) queryParams['endDate'] = endDate;
+    if (driverId != null && driverId.isNotEmpty) queryParams['driverId'] = driverId;
+
+    final uri = Uri.parse(ApiConfig.managerWasteWeighIns)
+        .replace(queryParameters: queryParams);
+    return await _apiService.get(uri.toString(), authenticated: true);
+  }
+
+  /// Get received waste (collected collection requests)
+  Future<Map<String, dynamic>> getReceivedWaste({
+    int page = 1,
+    int limit = 20,
+    String? wasteType,
+    String? processingStatus,
+    String? startDate,
+    String? endDate,
+    String? search,
+  }) async {
+    final queryParams = <String, String>{
+      'page': page.toString(),
+      'limit': limit.toString(),
+    };
+    if (wasteType != null && wasteType.isNotEmpty) queryParams['wasteType'] = wasteType;
+    if (processingStatus != null && processingStatus.isNotEmpty) queryParams['processingStatus'] = processingStatus;
+    if (startDate != null && startDate.isNotEmpty) queryParams['startDate'] = startDate;
+    if (endDate != null && endDate.isNotEmpty) queryParams['endDate'] = endDate;
+    if (search != null && search.isNotEmpty) queryParams['search'] = search;
+
+    final uri = Uri.parse(ApiConfig.managerWasteReceived)
+        .replace(queryParameters: queryParams);
+    return await _apiService.get(uri.toString(), authenticated: true);
+  }
+
+  /// Update waste processing status
+  Future<Map<String, dynamic>> updateWasteProcessing({
+    required String requestId,
+    String? processingStatus,
+    String? recyclableStatus,
+    double? recycledQuantity,
+    double? disposedQuantity,
+  }) async {
+    final body = <String, dynamic>{};
+    if (processingStatus != null) body['processingStatus'] = processingStatus;
+    if (recyclableStatus != null) body['recyclableStatus'] = recyclableStatus;
+    if (recycledQuantity != null) body['recycledQuantity'] = recycledQuantity;
+    if (disposedQuantity != null) body['disposedQuantity'] = disposedQuantity;
+
+    return await _apiService.patch(
+      ApiConfig.managerWasteProcessing(requestId),
+      body,
+      authenticated: true,
+    );
+  }
+
+  /// Get waste management reports
+  Future<Map<String, dynamic>> getWasteReports({String period = 'daily'}) async {
+    final uri = Uri.parse(ApiConfig.managerWasteReports)
+        .replace(queryParameters: {'period': period});
+    return await _apiService.get(uri.toString(), authenticated: true);
+  }
 }

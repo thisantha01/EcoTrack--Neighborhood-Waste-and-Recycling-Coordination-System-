@@ -658,4 +658,209 @@ class ManagerProvider extends ChangeNotifier {
     _selectedRequestAssignment = null;
     notifyListeners();
   }
+
+  // =====================================================
+  // WASTE MANAGEMENT STATE
+  // =====================================================
+
+  // Received waste (collected collection requests)
+  List<Map<String, dynamic>> _receivedWaste = [];
+  int _totalReceivedWaste = 0;
+  bool _isLoadingReceivedWaste = false;
+  String? _wasteError;
+
+  // Weigh-ins (driver end-of-day forms)
+  List<Map<String, dynamic>> _wasteWeighIns = [];
+  bool _isLoadingWeighIns = false;
+
+  // Waste report data
+  Map<String, dynamic> _wasteReport = {};
+  bool _isLoadingWasteReport = false;
+  String _wasteReportPeriod = 'daily';
+
+  // Processing update state
+  bool _isUpdatingProcessing = false;
+
+  // Waste filters
+  String? _wasteFilterType;
+  String? _wasteFilterProcessingStatus;
+  String? _wasteFilterStartDate;
+  String? _wasteFilterEndDate;
+  String? _wasteSearch;
+
+  // Getters
+  List<Map<String, dynamic>> get receivedWaste => List.unmodifiable(_receivedWaste);
+  int get totalReceivedWaste => _totalReceivedWaste;
+  bool get isLoadingReceivedWaste => _isLoadingReceivedWaste;
+  String? get wasteError => _wasteError;
+
+  List<Map<String, dynamic>> get wasteWeighIns => List.unmodifiable(_wasteWeighIns);
+  bool get isLoadingWeighIns => _isLoadingWeighIns;
+
+  Map<String, dynamic> get wasteReport => _wasteReport;
+  bool get isLoadingWasteReport => _isLoadingWasteReport;
+  String get wasteReportPeriod => _wasteReportPeriod;
+
+  bool get isUpdatingProcessing => _isUpdatingProcessing;
+
+  String? get wasteFilterType => _wasteFilterType;
+  String? get wasteFilterProcessingStatus => _wasteFilterProcessingStatus;
+  String? get wasteFilterStartDate => _wasteFilterStartDate;
+  String? get wasteFilterEndDate => _wasteFilterEndDate;
+  String? get wasteSearch => _wasteSearch;
+
+  // =====================================================
+  // FETCH RECEIVED WASTE
+  // =====================================================
+
+  Future<void> fetchReceivedWaste({bool refresh = false}) async {
+    if (_isLoadingReceivedWaste) return;
+    if (refresh) _receivedWaste = [];
+
+    _isLoadingReceivedWaste = true;
+    _wasteError = null;
+    notifyListeners();
+
+    try {
+      final response = await _managerService.getReceivedWaste(
+        wasteType: _wasteFilterType,
+        processingStatus: _wasteFilterProcessingStatus,
+        startDate: _wasteFilterStartDate,
+        endDate: _wasteFilterEndDate,
+        search: _wasteSearch,
+      );
+      final list = response['requests'];
+      if (list is List) {
+        _receivedWaste = list
+            .whereType<Map>()
+            .map((e) => Map<String, dynamic>.from(e))
+            .toList();
+      }
+      _totalReceivedWaste = (response['pagination']?['total'] as num?)?.toInt() ?? _receivedWaste.length;
+    } catch (e) {
+      _wasteError = e.toString().replaceFirst('Exception: ', '');
+    } finally {
+      _isLoadingReceivedWaste = false;
+      notifyListeners();
+    }
+  }
+
+  // =====================================================
+  // FETCH WEIGH-INS
+  // =====================================================
+
+  Future<void> fetchWasteWeighIns({String? startDate, String? endDate}) async {
+    if (_isLoadingWeighIns) return;
+    _isLoadingWeighIns = true;
+    notifyListeners();
+
+    try {
+      final response = await _managerService.getWasteWeighIns(
+        startDate: startDate,
+        endDate: endDate,
+      );
+      final list = response['weighIns'];
+      if (list is List) {
+        _wasteWeighIns = list
+            .whereType<Map>()
+            .map((e) => Map<String, dynamic>.from(e))
+            .toList();
+      }
+    } catch (e) {
+      _wasteError = e.toString().replaceFirst('Exception: ', '');
+    } finally {
+      _isLoadingWeighIns = false;
+      notifyListeners();
+    }
+  }
+
+  // =====================================================
+  // UPDATE WASTE PROCESSING
+  // =====================================================
+
+  Future<bool> updateWasteProcessing({
+    required String requestId,
+    String? processingStatus,
+    String? recyclableStatus,
+    double? recycledQuantity,
+    double? disposedQuantity,
+  }) async {
+    _isUpdatingProcessing = true;
+    notifyListeners();
+    try {
+      await _managerService.updateWasteProcessing(
+        requestId: requestId,
+        processingStatus: processingStatus,
+        recyclableStatus: recyclableStatus,
+        recycledQuantity: recycledQuantity,
+        disposedQuantity: disposedQuantity,
+      );
+      // Refresh the received waste list
+      await fetchReceivedWaste(refresh: true);
+      return true;
+    } catch (e) {
+      _wasteError = e.toString().replaceFirst('Exception: ', '');
+      notifyListeners();
+      return false;
+    } finally {
+      _isUpdatingProcessing = false;
+      notifyListeners();
+    }
+  }
+
+  // =====================================================
+  // FETCH WASTE REPORT
+  // =====================================================
+
+  Future<void> fetchWasteReport({String period = 'daily'}) async {
+    if (_isLoadingWasteReport) return;
+    _wasteReportPeriod = period;
+    _isLoadingWasteReport = true;
+    notifyListeners();
+
+    try {
+      final response = await _managerService.getWasteReports(period: period);
+      _wasteReport = response['report'] is Map
+          ? Map<String, dynamic>.from(response['report'] as Map)
+          : {};
+    } catch (e) {
+      _wasteError = e.toString().replaceFirst('Exception: ', '');
+    } finally {
+      _isLoadingWasteReport = false;
+      notifyListeners();
+    }
+  }
+
+  // =====================================================
+  // WASTE FILTERS
+  // =====================================================
+
+  void setWasteFilters({
+    String? wasteType,
+    String? processingStatus,
+    String? startDate,
+    String? endDate,
+    String? search,
+  }) {
+    _wasteFilterType = wasteType;
+    _wasteFilterProcessingStatus = processingStatus;
+    _wasteFilterStartDate = startDate;
+    _wasteFilterEndDate = endDate;
+    _wasteSearch = search;
+    fetchReceivedWaste(refresh: true);
+  }
+
+  void clearWasteFilters() {
+    _wasteFilterType = null;
+    _wasteFilterProcessingStatus = null;
+    _wasteFilterStartDate = null;
+    _wasteFilterEndDate = null;
+    _wasteSearch = null;
+    fetchReceivedWaste(refresh: true);
+  }
+
+  void clearWasteError() {
+    _wasteError = null;
+    notifyListeners();
+  }
 }

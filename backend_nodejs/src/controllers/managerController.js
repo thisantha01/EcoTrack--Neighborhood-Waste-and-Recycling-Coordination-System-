@@ -434,6 +434,365 @@ const assignDriver = async (req, res) => {
 
 
 // =====================================================
+// WASTE MANAGEMENT
+// =====================================================
+
+const WasteWeighIn = require('../models/WasteWeighIn');
+
+/**
+ * GET /api/manager/waste/weigh-ins
+ * Get all driver weigh-in records (paginated, filterable)
+ */
+const getWasteWeighIns = async (req, res) => {
+  try {
+    const { page = 1, limit = 20, startDate, endDate, driverId } = req.query;
+    const pageNum = parseInt(page) || 1;
+    const limitNum = Math.min(parseInt(limit) || 20, 100);
+    const skip = (pageNum - 1) * limitNum;
+
+    const filter = {};
+    if (driverId) filter.driver = driverId;
+    if (startDate || endDate) {
+      filter.recordedAt = {};
+      if (startDate) filter.recordedAt.$gte = new Date(startDate);
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        filter.recordedAt.$lte = end;
+      }
+    }
+
+    const [weighIns, total] = await Promise.all([
+      WasteWeighIn.find(filter)
+        .sort({ recordedAt: -1 })
+        .skip(skip)
+        .limit(limitNum)
+        .populate('driver', 'name phone')
+        .populate('route', 'routeName zone')
+        .lean(),
+      WasteWeighIn.countDocuments(filter),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      weighIns,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        pages: Math.ceil(total / limitNum),
+      },
+    });
+  } catch (error) {
+    console.error('Get waste weigh-ins error:', error);
+    return res.status(500).json({ success: false, message: 'Unable to fetch weigh-in records' });
+  }
+};
+
+/**
+ * GET /api/manager/waste/received
+ * Get collected CollectionRequests (status=collected) for waste receiving section
+ * Also returns weigh-ins so the frontend can display both sources
+ */
+const getReceivedWaste = async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 20,
+      wasteType,
+      processingStatus,
+      startDate,
+      endDate,
+      search,
+    } = req.query;
+    const pageNum = parseInt(page) || 1;
+    const limitNum = Math.min(parseInt(limit) || 20, 100);
+    const skip = (pageNum - 1) * limitNum;
+
+    // Only show collected requests (waste physically received at center)
+    const filter = { status: 'collected' };
+    if (wasteType) filter.wasteType = wasteType;
+    if (processingStatus) {
+      filter.processingStatus = processingStatus;
+    }
+    if (startDate || endDate) {
+      filter.updatedAt = {};
+      if (startDate) filter.updatedAt.$gte = new Date(startDate);
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        filter.updatedAt.$lte = end;
+      }
+    }
+    if (search) {
+      filter.$or = [
+        { location: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
+      ];
+    }
+
+    const [requests, total] = await Promise.all([
+      CollectionRequest.find(filter)
+        .sort({ updatedAt: -1 })
+        .skip(skip)
+        .limit(limitNum)
+        .populate('requester', 'name phone location')
+        .populate('assignedDriver', 'name phone')
+        .populate('processedBy', 'name')
+        .lean(),
+      CollectionRequest.countDocuments(filter),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      requests,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        pages: Math.ceil(total / limitNum),
+      },
+    });
+  } catch (error) {
+    console.error('Get received waste error:', error);
+    return res.status(500).json({ success: false, message: 'Unable to fetch received waste records' });
+  }
+};
+
+/**
+ * PATCH /api/manager/waste/requests/:requestId/processing
+ * Update the processing status of a collected waste request
+ */
+const updateWasteProcessing = async (req, res) => {
+  try {
+    const { requestId } = req.params;
+    const {
+      processingStatus,
+      recyclableStatus,
+      recycledQuantity,
+      disposedQuantity,
+    } = req.body;
+
+    const request = await CollectionRequest.findById(requestId);
+    if (!request) {
+      return res.status(404).json({ success: false, message: 'Collection request not found' });
+    }
+    if (request.status !== 'collected') {
+      return res.status(400).json({ success: false, message: 'Only collected requests can be processed' });
+    }
+
+    const receivedWeight = request.collectedQuantity ?? request.estimatedQuantity ?? 0;
+
+    // Validate quantities
+    if (recycledQuantity !== undefined && recycledQuantity !== null) {
+      const rq = Number(recycledQuantity);
+      if (!Number.isFinite(rq) || rq < 0) {
+        return res.status(400).json({ success: false, message: 'Recycled quantity must be zero or greater' });
+      }
+      if (rq > receivedWeight) {
+        return res.status(400).json({ success: false, message: 'Recycled quantity cannot exceed received weight' });
+      }
+      request.recycledQuantity = rq;
+    }
+    if (disposedQuantity !== undefined && disposedQuantity !== null) {
+      const dq = Number(disposedQuantity);
+      if (!Number.isFinite(dq) || dq < 0) {
+        return res.status(400).json({ success: false, message: 'Disposed quantity must be zero or greater' });
+      }
+      if (dq > receivedWeight) {
+        return res.status(400).json({ success: false, message: 'Disposed quantity cannot exceed received weight' });
+      }
+      request.disposedQuantity = dq;
+    }
+    // Cross-field validation
+    const totalProcessed = (request.recycledQuantity ?? 0) + (request.disposedQuantity ?? 0);
+    if (totalProcessed > receivedWeight) {
+      return res.status(400).json({
+        success: false,
+        message: `Total processed quantity (${totalProcessed} kg) exceeds received weight (${receivedWeight} kg)`,
+      });
+    }
+
+    const validStatuses = ['received', 'sorted', 'recyclable', 'non_recyclable', 'processed', 'recycled', 'disposed'];
+    if (processingStatus && !validStatuses.includes(processingStatus)) {
+      return res.status(400).json({ success: false, message: 'Invalid processing status' });
+    }
+    if (processingStatus) {
+      request.processingStatus = processingStatus;
+      if (processingStatus === 'sorted') request.sortedAt = new Date();
+      if (['processed', 'recycled', 'disposed'].includes(processingStatus)) {
+        request.processedAt = new Date();
+        request.processedBy = req.user._id;
+      }
+    }
+    if (recyclableStatus !== undefined) {
+      request.recyclableStatus = recyclableStatus || null;
+    }
+
+    await request.save();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Processing status updated',
+      request: {
+        _id: request._id,
+        processingStatus: request.processingStatus,
+        recyclableStatus: request.recyclableStatus,
+        recycledQuantity: request.recycledQuantity,
+        disposedQuantity: request.disposedQuantity,
+        sortedAt: request.sortedAt,
+        processedAt: request.processedAt,
+      },
+    });
+  } catch (error) {
+    console.error('Update waste processing error:', error);
+    return res.status(500).json({ success: false, message: 'Unable to update processing status' });
+  }
+};
+
+/**
+ * GET /api/manager/waste/reports
+ * Aggregate waste data for daily/weekly/monthly reports
+ */
+const getWasteReports = async (req, res) => {
+  try {
+    const { period = 'daily' } = req.query;
+
+    const now = new Date();
+    const startOfToday = new Date(now);
+    startOfToday.setHours(0, 0, 0, 0);
+
+    let startDate;
+    if (period === 'daily') {
+      startDate = startOfToday;
+    } else if (period === 'weekly') {
+      startDate = new Date(startOfToday);
+      const dayOfWeek = startDate.getDay();
+      const daysSinceMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+      startDate.setDate(startDate.getDate() - daysSinceMonday);
+    } else if (period === 'monthly') {
+      startDate = new Date(startOfToday.getFullYear(), startOfToday.getMonth(), 1);
+    } else {
+      startDate = startOfToday;
+    }
+
+    // Aggregate collected requests for the period
+    const [periodStats, dailyStats, weighInStats, byCategory] = await Promise.all([
+      // Period aggregate
+      CollectionRequest.aggregate([
+        {
+          $match: {
+            status: 'collected',
+            updatedAt: { $gte: startDate },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            totalReceived: { $sum: { $ifNull: ['$collectedQuantity', '$estimatedQuantity'] } },
+            totalRecycled: { $sum: { $ifNull: ['$recycledQuantity', 0] } },
+            totalDisposed: { $sum: { $ifNull: ['$disposedQuantity', 0] } },
+            recyclableCount: { $sum: { $cond: [{ $eq: ['$recyclableStatus', 'recyclable'] }, 1, 0] } },
+            nonRecyclableCount: { $sum: { $cond: [{ $eq: ['$recyclableStatus', 'non_recyclable'] }, 1, 0] } },
+            totalRecords: { $sum: 1 },
+          },
+        },
+      ]),
+      // Today aggregate
+      CollectionRequest.aggregate([
+        {
+          $match: {
+            status: 'collected',
+            updatedAt: { $gte: startOfToday },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            totalReceived: { $sum: { $ifNull: ['$collectedQuantity', '$estimatedQuantity'] } },
+            totalRecycled: { $sum: { $ifNull: ['$recycledQuantity', 0] } },
+            totalDisposed: { $sum: { $ifNull: ['$disposedQuantity', 0] } },
+            totalRecords: { $sum: 1 },
+          },
+        },
+      ]),
+      // Weigh-in totals for period (from driver weigh-ins)
+      WasteWeighIn.aggregate([
+        { $match: { recordedAt: { $gte: startDate } } },
+        {
+          $group: {
+            _id: null,
+            organic: { $sum: '$weightsKg.organic' },
+            plasticPaper: { $sum: '$weightsKg.plasticPaper' },
+            glassOthers: { $sum: '$weightsKg.glassOthers' },
+            totalWeighIns: { $sum: 1 },
+          },
+        },
+      ]),
+      // By waste category (all time for stats)
+      CollectionRequest.aggregate([
+        { $match: { status: 'collected' } },
+        {
+          $group: {
+            _id: '$wasteType',
+            totalWeight: { $sum: { $ifNull: ['$collectedQuantity', '$estimatedQuantity'] } },
+            count: { $sum: 1 },
+          },
+        },
+        { $sort: { totalWeight: -1 } },
+      ]),
+    ]);
+
+    const period_data = periodStats[0] || { totalReceived: 0, totalRecycled: 0, totalDisposed: 0, recyclableCount: 0, nonRecyclableCount: 0, totalRecords: 0 };
+    const today_data = dailyStats[0] || { totalReceived: 0, totalRecycled: 0, totalDisposed: 0, totalRecords: 0 };
+    const weighIn_data = weighInStats[0] || { organic: 0, plasticPaper: 0, glassOthers: 0, totalWeighIns: 0 };
+
+    const totalReceived = Number(period_data.totalReceived) || 0;
+    const totalRecycled = Number(period_data.totalRecycled) || 0;
+    const recyclingPercentage = totalReceived > 0 ? Math.round((totalRecycled / totalReceived) * 100 * 10) / 10 : 0;
+
+    return res.status(200).json({
+      success: true,
+      period,
+      report: {
+        // Period data
+        totalReceived: totalReceived,
+        totalRecycled: totalRecycled,
+        totalDisposed: Number(period_data.totalDisposed) || 0,
+        recyclableCount: period_data.recyclableCount || 0,
+        nonRecyclableCount: period_data.nonRecyclableCount || 0,
+        totalRecords: period_data.totalRecords || 0,
+        recyclingPercentage,
+        // Today data
+        today: {
+          totalReceived: Number(today_data.totalReceived) || 0,
+          totalRecycled: Number(today_data.totalRecycled) || 0,
+          totalDisposed: Number(today_data.totalDisposed) || 0,
+          totalRecords: today_data.totalRecords || 0,
+        },
+        // Driver weigh-in totals (from end-of-day forms)
+        weighInTotals: {
+          organic: Number(weighIn_data.organic) || 0,
+          plasticPaper: Number(weighIn_data.plasticPaper) || 0,
+          glassOthers: Number(weighIn_data.glassOthers) || 0,
+          totalWeighIns: weighIn_data.totalWeighIns || 0,
+        },
+        // Category breakdown
+        byCategory: byCategory.map((c) => ({
+          category: c._id || 'other',
+          totalWeight: Number(c.totalWeight) || 0,
+          count: c.count || 0,
+        })),
+      },
+    });
+  } catch (error) {
+    console.error('Get waste reports error:', error);
+    return res.status(500).json({ success: false, message: 'Unable to generate waste report' });
+  }
+};
+
+
+// =====================================================
 // EXPORT
 // =====================================================
 
@@ -444,4 +803,8 @@ module.exports = {
   getRequestDetails,
   getAvailableDrivers,
   assignDriver,
+  getWasteWeighIns,
+  getReceivedWaste,
+  updateWasteProcessing,
+  getWasteReports,
 };
