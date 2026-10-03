@@ -37,7 +37,7 @@ class StatusEntry {
   factory StatusEntry.fromJson(Map<String, dynamic> json) {
     return StatusEntry(
       status: json['status'] ?? '',
-      timestamp: DateTime.parse(json['timestamp']),
+      timestamp: DateTime.parse(json['timestamp']).toLocal(),
       note: json['note'] ?? '',
     );
   }
@@ -50,6 +50,7 @@ class CollectionRequest {
   final String? requesterPicture;
   final RequestUser? requester;
   final String wasteType;
+  final List<String> wasteTypes;
   final double estimatedQuantity;
   final String description;
   final String? imageUrl;
@@ -78,6 +79,7 @@ class CollectionRequest {
     this.requesterPicture,
     this.requester,
     required this.wasteType,
+    this.wasteTypes = const [],
     required this.estimatedQuantity,
     this.description = '',
     this.imageUrl,
@@ -129,6 +131,12 @@ class CollectionRequest {
       requesterPicture: requester?.profilePicture,
       requester: requester,
       wasteType: json['wasteType'] ?? '',
+      wasteTypes: (json['wasteTypes'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          (json['wasteType'] != null && json['wasteType'].toString().isNotEmpty
+              ? [json['wasteType'].toString()]
+              : []),
       estimatedQuantity: (json['estimatedQuantity'] ?? 0).toDouble(),
       description: json['description'] ?? '',
       imageUrl: json['imageUrl'],
@@ -136,7 +144,7 @@ class CollectionRequest {
       lat: json['coordinates']?['lat']?.toDouble(),
       lng: json['coordinates']?['lng']?.toDouble(),
       preferredDate: json['preferredDate'] != null
-          ? DateTime.tryParse(json['preferredDate'])
+          ? DateTime.tryParse(json['preferredDate'].toString())?.toLocal()
           : null,
       preferredTime: json['preferredTime'],
       status: json['status'] ?? 'requested',
@@ -157,16 +165,16 @@ class CollectionRequest {
           ?.toDouble(),
       suggestedRouteReason: suggestedRoute?['reason']?.toString(),
       createdAt:
-          DateTime.tryParse(json['createdAt']?.toString() ?? '') ??
+          DateTime.tryParse(json['createdAt']?.toString() ?? '')?.toLocal() ??
           DateTime.now(),
       updatedAt: json['updatedAt'] == null
           ? null
-          : DateTime.tryParse(json['updatedAt'].toString()),
+          : DateTime.tryParse(json['updatedAt'].toString())?.toLocal(),
     );
   }
 
-  String get wasteTypeLabel {
-    switch (wasteType) {
+  static String formatWasteType(String type) {
+    switch (type.toLowerCase()) {
       case 'organic':
         return 'Organic';
       case 'plastic':
@@ -182,8 +190,27 @@ class CollectionRequest {
       case 'hazardous':
         return 'Hazardous';
       default:
-        return 'Other';
+        return type.isNotEmpty
+            ? type[0].toUpperCase() + type.substring(1)
+            : 'Other';
     }
+  }
+
+  String get wasteTypeLabel {
+    if (wasteTypes.isNotEmpty) {
+      return wasteTypes.map(formatWasteType).join(', ');
+    }
+    return formatWasteType(wasteType);
+  }
+
+  List<String> get formattedWasteTypes {
+    if (wasteTypes.isNotEmpty) {
+      return wasteTypes.map(formatWasteType).toList();
+    }
+    if (wasteType.isNotEmpty) {
+      return [formatWasteType(wasteType)];
+    }
+    return ['Other'];
   }
 
   String get statusLabel {

@@ -10,6 +10,7 @@ import '../community/engagement_screen.dart';
 import '../profile/profile_screen.dart';
 import '../community/widgets/notification_bell_button.dart';
 import 'widgets/home_route_map_section.dart';
+import 'widgets/active_collection_banner.dart';
 
 class NeighbourDashboard extends StatefulWidget {
   const NeighbourDashboard({super.key});
@@ -192,6 +193,9 @@ class _NeighbourHome extends StatelessWidget {
             ),
 
             const SizedBox(height: 16),
+
+            // ── Active Collection Request Alert Banner ─────────────────
+            ActiveCollectionBanner(onTabSwitchToRequests: onGoToRequests),
 
             // ── Today's Waste Collection Route Map & Schedule Card ─────
             HomeRouteMapSection(onGoToRequests: onGoToRequests),

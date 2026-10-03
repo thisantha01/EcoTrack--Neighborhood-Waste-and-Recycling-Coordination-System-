@@ -113,30 +113,61 @@ collectionRequestSchema.index({ requester: 1, createdAt: -1 });
 collectionRequestSchema.index({ status: 1 });
 collectionRequestSchema.index({ assignedDriver: 1 });
 
-// Notification Trigger: Detect status transition to 'accepted'
-collectionRequestSchema.pre('save', function (next) {
-  if (this.isModified('status') && this.status === 'accepted') {
-    this._wasJustAccepted = true;
+// Notification Trigger: Detect status transition to 'accepted' or 'scheduled'
+collectionRequestSchema.pre('save', function () {
+  if (this.isModified('status')) {
+    if (this.status === 'scheduled') {
+      this._wasJustScheduled = true;
+    } else if (this.status === 'accepted') {
+      this._wasJustAccepted = true;
+    }
   }
-  next();
 });
 
 collectionRequestSchema.post('save', async function (doc) {
-  if (doc._wasJustAccepted) {
+  if (doc._wasJustAccepted || doc._wasJustScheduled) {
     try {
       const Notification = require('./Notification');
+      const User = require('./User');
+      const isScheduled = doc._wasJustScheduled || doc.status === 'scheduled';
+      const notifType = isScheduled ? 'request_scheduled' : 'request_accepted';
+
+      // Avoid duplicate notifications for the same event
+      const existing = await Notification.findOne({
+        relatedId: doc._id,
+        type: notifType,
+      });
+      if (existing) return;
+
       const wasteType =
-        doc.wasteType ||
-        (Array.isArray(doc.wasteTypes) && doc.wasteTypes.length > 0
-          ? doc.wasteTypes.join(', ')
-          : 'waste');
+        (Array.isArray(doc.wasteTypes) && doc.wasteTypes.length > 0)
+          ? doc.wasteTypes.map((t) => t.charAt(0).toUpperCase() + t.slice(1)).join(', ')
+          : (doc.wasteType ? doc.wasteType.charAt(0).toUpperCase() + doc.wasteType.slice(1) : 'waste');
       const qty = doc.estimatedQuantity ? `${doc.estimatedQuantity} kg` : '';
+
+      let driverName = null;
+      if (doc.assignedDriver) {
+        try {
+          const driver = await User.findById(doc.assignedDriver).select('name');
+          if (driver) driverName = driver.name;
+        } catch (_) {}
+      }
+
+      const title = isScheduled
+        ? 'Collection Request Scheduled! 🚚'
+        : 'Collection Request Accepted! ✅';
+
+      const message = isScheduled
+        ? (driverName
+            ? `Your collection request for ${wasteType} ${qty ? `(${qty})` : ''} at ${doc.location || 'your location'} has been confirmed and scheduled with driver ${driverName}.`
+            : `Your collection request for ${wasteType} ${qty ? `(${qty})` : ''} at ${doc.location || 'your location'} has been confirmed and scheduled for pickup.`)
+        : `Your collection request for ${wasteType} ${qty ? `(${qty})` : ''} at ${doc.location || 'your location'} has been accepted and confirmed.`;
 
       await Notification.create({
         recipient: doc.requester,
-        title: 'Collection Request Accepted! ✅',
-        message: `Your collection request for ${wasteType} ${qty ? `(${qty})` : ''} at ${doc.location || 'your location'} has been accepted and confirmed.`,
-        type: 'request_accepted',
+        title,
+        message,
+        type: notifType,
         relatedId: doc._id,
         metadata: {
           requestId: doc._id,
@@ -146,12 +177,14 @@ collectionRequestSchema.post('save', async function (doc) {
           location: doc.location,
           preferredDate: doc.preferredDate,
           preferredTime: doc.preferredTime,
-          status: 'accepted',
+          driverName: driverName,
+          status: doc.status,
+          scheduledAt: isScheduled ? new Date() : undefined,
           acceptedAt: new Date(),
         },
       });
     } catch (err) {
-      console.error('Error generating request acceptance notification:', err);
+      console.error('Error generating request notification:', err);
     }
   }
 });

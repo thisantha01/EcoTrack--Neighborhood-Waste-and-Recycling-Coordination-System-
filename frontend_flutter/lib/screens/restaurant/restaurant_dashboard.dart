@@ -11,6 +11,7 @@ import '../community/engagement_screen.dart';
 import '../profile/profile_screen.dart';
 import '../community/widgets/notification_bell_button.dart';
 import '../neighbour/widgets/home_route_map_section.dart';
+import '../neighbour/widgets/active_collection_banner.dart';
 
 class RestaurantDashboard extends StatefulWidget {
   const RestaurantDashboard({super.key});
@@ -168,6 +169,9 @@ class _RestaurantHome extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
+
+            // ── Active Collection Request Alert Banner ─────────────────
+            ActiveCollectionBanner(onTabSwitchToRequests: onGoToRequests),
 
             // ── Today's Waste Collection Route Map & Schedule Card ─────
             HomeRouteMapSection(onGoToRequests: onGoToRequests),

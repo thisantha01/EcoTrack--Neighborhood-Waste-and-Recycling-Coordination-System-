@@ -32,12 +32,14 @@ class AppNotification {
       metadata: json['metadata'] is Map ? Map<String, dynamic>.from(json['metadata']) : {},
       isRead: json['isRead'] == true,
       createdAt: json['createdAt'] != null
-          ? DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now()
+          ? (DateTime.tryParse(json['createdAt'].toString())?.toLocal() ?? DateTime.now())
           : DateTime.now(),
     );
   }
 
-  bool get isRequestAccepted => type == 'request_accepted';
+  bool get isRequestAccepted =>
+      type == 'request_accepted' || type == 'request_scheduled';
+  bool get isRequestScheduled => type == 'request_scheduled';
 
   String? get targetRequestId =>
       metadata['requestId']?.toString() ?? relatedId;
@@ -45,6 +47,7 @@ class AppNotification {
   String? get wasteType => metadata['wasteType']?.toString();
   String? get quantity => metadata['quantity']?.toString() ?? metadata['estimatedQuantity']?.toString();
   String? get locationAddress => metadata['location']?.toString();
+  String? get driverName => metadata['driverName']?.toString() ?? metadata['assignedDriverName']?.toString();
 
   String get timeAgo {
     final now = DateTime.now();

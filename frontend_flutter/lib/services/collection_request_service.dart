@@ -41,7 +41,9 @@ class CollectionRequestService {
         'imageUrl': imageUrl,
         'location': location,
         'coordinates': lat != null && lng != null ? {'lat': lat, 'lng': lng} : null,
-        'preferredDate': preferredDate?.toIso8601String(),
+        'preferredDate': preferredDate != null
+            ? '${preferredDate.year.toString().padLeft(4, '0')}-${preferredDate.month.toString().padLeft(2, '0')}-${preferredDate.day.toString().padLeft(2, '0')}'
+            : null,
         'preferredTime': preferredTime,
       }),
     );
