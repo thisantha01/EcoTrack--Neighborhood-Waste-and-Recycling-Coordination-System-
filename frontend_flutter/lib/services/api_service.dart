@@ -166,13 +166,26 @@ class ApiService {
         }
       }
 
-      final response = await http.patch(
-        Uri.parse(url),
-        headers: headers,
-        body: jsonEncode(body),
-      );
+      final response = await http
+          .patch(
+            Uri.parse(url),
+            headers: headers,
+            body: jsonEncode(body),
+          )
+          .timeout(_timeout);
       return _handleResponse(response);
+    } on SocketException {
+      throw Exception(
+        'Cannot connect to server. Make sure the backend is running and '
+        'your phone is on the same Wi-Fi network as your PC.',
+      );
+    } on TimeoutException {
+      throw Exception(
+        'Connection timed out. Check that the server IP in api_config.dart '
+        'matches your PC\'s local IP address (run ipconfig to verify).',
+      );
     } catch (e) {
+      if (e is Exception) rethrow;
       throw Exception('Unable to connect to server: $e');
     }
   }

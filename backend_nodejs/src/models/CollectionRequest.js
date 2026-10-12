@@ -115,11 +115,10 @@ collectionRequestSchema.index({ status: 1 });
 collectionRequestSchema.index({ assignedDriver: 1 });
 
 // Notification Trigger: Detect status transition to 'accepted'
-collectionRequestSchema.pre('save', function (next) {
+collectionRequestSchema.pre('save', function () {
   if (this.isModified('status') && this.status === 'accepted') {
     this._wasJustAccepted = true;
   }
-  next();
 });
 
 collectionRequestSchema.post('save', async function (doc) {

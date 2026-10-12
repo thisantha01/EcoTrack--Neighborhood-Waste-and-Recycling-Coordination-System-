@@ -394,6 +394,7 @@ class _ManagerAssignmentScreenState extends State<ManagerAssignmentScreen> {
               const SizedBox(height: 6),
               DropdownButtonFormField<String>(
                 initialValue: _routeId,
+                isExpanded: true,
                 decoration: _decoration(Icons.alt_route, 'Choose route'),
                 items: provider.routes.map((route) {
                   final id = route['_id']?.toString();
@@ -402,7 +403,10 @@ class _ManagerAssignmentScreenState extends State<ManagerAssignmentScreen> {
                   final zone = route['zone']?.toString() ?? '';
                   return DropdownMenuItem(
                     value: id,
-                    child: Text('$name ($zone)'),
+                    child: Text(
+                      '$name ($zone)',
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   );
                 }).whereType<DropdownMenuItem<String>>().toList(),
                 onChanged: (value) {
@@ -436,6 +440,7 @@ class _ManagerAssignmentScreenState extends State<ManagerAssignmentScreen> {
               const SizedBox(height: 6),
               DropdownButtonFormField<String>(
                 initialValue: _driverId,
+                isExpanded: true,
                 decoration: _decoration(Icons.person_outline, 'Choose driver'),
                 items: provider.availableDrivers.map((driver) {
                   final id = driver['driverId']?.toString() ?? driver['_id']?.toString();
@@ -447,7 +452,12 @@ class _ManagerAssignmentScreenState extends State<ManagerAssignmentScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(name),
+                        Flexible(
+                          child: Text(
+                            name,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
                         const SizedBox(width: 8),
                         Text(
                           isAvail ? 'Available' : 'Busy',
