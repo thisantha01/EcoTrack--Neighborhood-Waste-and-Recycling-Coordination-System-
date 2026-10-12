@@ -116,4 +116,11 @@ class ApiConfig {
   static String get notificationsReadAll => '$baseUrl/notifications/read-all';
   static String notificationMarkRead(String id) => '$baseUrl/notifications/$id/read';
   static String notificationDelete(String id) => '$baseUrl/notifications/$id';
+
+  // Manager - Waste Management
+  static String get managerWasteWeighIns => '$baseUrl/manager/waste/weigh-ins';
+  static String get managerWasteReceived => '$baseUrl/manager/waste/received';
+  static String get managerWasteReports => '$baseUrl/manager/waste/reports';
+  static String managerWasteProcessing(String id) =>
+      '$baseUrl/manager/waste/requests/$id/processing';
 }

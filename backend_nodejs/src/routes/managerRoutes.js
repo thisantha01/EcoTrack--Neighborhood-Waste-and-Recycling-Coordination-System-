@@ -7,6 +7,10 @@ const {
   getAvailableDrivers,
   assignDriver,
   getDriverLiveLocation,
+  getWasteWeighIns,
+  getReceivedWaste,
+  updateWasteProcessing,
+  getWasteReports,
 } = require('../controllers/managerController');
 
 const router = express.Router();
@@ -32,5 +36,13 @@ router.post(
   '/collection-requests/:requestId/assign-driver',
   assignDriver
 );
+
+// =====================================================
+// WASTE MANAGEMENT
+// =====================================================
+router.get('/waste/weigh-ins', getWasteWeighIns);
+router.get('/waste/received', getReceivedWaste);
+router.patch('/waste/requests/:requestId/processing', updateWasteProcessing);
+router.get('/waste/reports', getWasteReports);
 
 module.exports = router;

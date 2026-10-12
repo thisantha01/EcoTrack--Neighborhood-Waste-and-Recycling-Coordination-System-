@@ -5,7 +5,6 @@ import '../../providers/manager_provider.dart';
 import '../profile/profile_screen.dart';
 import 'assign_route_screen.dart';
 import 'collection_requests_screen.dart';
-import 'manager_inventory_screen.dart';
 import 'manager_route_map_screen.dart';
 import 'manager_routes_screen.dart';
 import 'manager_waste_screen.dart';
@@ -34,7 +33,6 @@ class _RecyclingManagerDashboardState extends State<RecyclingManagerDashboard> {
       const CollectionRequestsScreen(),
       const ManagerRoutesScreen(),
       const ManagerWasteScreen(),
-      const ManagerInventoryScreen(),
       const ProfileScreen(),
     ];
 
@@ -66,11 +64,6 @@ class _RecyclingManagerDashboardState extends State<RecyclingManagerDashboard> {
             icon: Icon(Icons.delete_outline),
             selectedIcon: Icon(Icons.delete, color: Color(0xFF0097A7)),
             label: 'Waste',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.inventory_2_outlined),
-            selectedIcon: Icon(Icons.inventory_2, color: Color(0xFF0097A7)),
-            label: 'Inventory',
           ),
           NavigationDestination(
             icon: Icon(Icons.person_outline),
