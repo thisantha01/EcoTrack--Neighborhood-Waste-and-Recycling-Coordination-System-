@@ -86,6 +86,7 @@ const getMyRequests = async (req, res) => {
 
     const requests = await CollectionRequest.find(filter)
       .sort({ createdAt: -1 })
+      .select('-imageUrl')
       .populate('requester', 'name profilePicture role')
       .populate('assignedDriver', 'name profilePicture');
 
@@ -117,6 +118,7 @@ const getAllRequests = async (req, res) => {
 
     const requests = await CollectionRequest.find(filter)
       .sort({ createdAt: -1 })
+      .select('-imageUrl')
       .populate('requester', 'name profilePicture role')
       .populate('assignedDriver', 'name profilePicture');
 
@@ -193,7 +195,7 @@ const updateStatus = async (req, res) => {
 
     // Validate status transitions
     const validTransitions = {
-      requested: ['accepted', 'cancelled'],
+      requested: ['accepted', 'scheduled', 'cancelled'],
       accepted: ['scheduled', 'cancelled'],
       scheduled: ['collected', 'cancelled'],
       collected: [],

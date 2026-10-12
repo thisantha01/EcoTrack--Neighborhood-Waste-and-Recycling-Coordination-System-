@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../models/collection_request_model.dart';
@@ -166,7 +167,9 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                       ? Icons.check_circle
                       : request.status == 'cancelled'
                           ? Icons.cancel
-                          : Icons.hourglass_top,
+                          : (request.status == 'scheduled'
+                              ? Icons.local_shipping
+                              : Icons.hourglass_top),
                   color: color,
                   size: 48,
                 ),
@@ -213,7 +216,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
             ),
             child: Column(
               children: [
-                _infoRow(Icons.category, 'Waste Type', request.wasteTypeLabel),
+                _wasteTypeRow(request),
                 const Divider(),
                 _infoRow(Icons.scale, 'Quantity',
                     '${request.estimatedQuantity} kg'),
@@ -249,20 +252,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
             const SizedBox(height: 12),
             ClipRRect(
               borderRadius: BorderRadius.circular(16),
-              child: Image.network(
-                request.imageUrl!,
-                height: 200,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
-                  height: 200,
-                  color: Colors.grey.shade200,
-                  child: const Center(
-                    child: Icon(Icons.broken_image,
-                        size: 48, color: Colors.grey),
-                  ),
-                ),
-              ),
+              child: _buildImage(request.imageUrl!),
             ),
           ],
 
@@ -333,7 +323,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                                         fontSize: 12, color: Colors.grey)),
                               Text(
                                 DateFormat('MMM d, yyyy • h:mm a')
-                                    .format(entry.timestamp),
+                                    .format(entry.timestamp.toLocal()),
                                 style: const TextStyle(
                                     fontSize: 11, color: Colors.grey),
                               ),
@@ -375,6 +365,68 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
     );
   }
 
+  Widget _wasteTypeRow(CollectionRequest request) {
+    final types = request.wasteTypes.isNotEmpty
+        ? request.wasteTypes
+        : (request.wasteType.isNotEmpty ? [request.wasteType] : ['other']);
+    final isMultiple = types.length > 1;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(top: 2),
+          child: Icon(Icons.category, size: 18, color: Colors.grey),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                isMultiple ? 'Waste Types' : 'Waste Type',
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: types.map((type) {
+                  final label = CollectionRequest.formatWasteType(type);
+                  final icon = CollectionRequest.getWasteTypeIcon(type);
+                  return Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE8F5E9),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFFA5D6A7)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(icon, size: 14, color: const Color(0xFF2E7D32)),
+                        const SizedBox(width: 5),
+                        Text(
+                          label,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF2E7D32),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _infoRow(IconData icon, String label, String value) {
     return Row(
       children: [
@@ -391,6 +443,42 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildImage(String url) {
+    if (url.startsWith('data:image') || url.startsWith('base64,')) {
+      try {
+        final commaIdx = url.indexOf(',');
+        final base64Str = commaIdx != -1 ? url.substring(commaIdx + 1) : url;
+        final bytes = base64Decode(base64Str.trim());
+        return Image.memory(
+          bytes,
+          height: 200,
+          width: double.infinity,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => _imagePlaceholder(),
+        );
+      } catch (_) {
+        return _imagePlaceholder();
+      }
+    }
+    return Image.network(
+      url,
+      height: 200,
+      width: double.infinity,
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) => _imagePlaceholder(),
+    );
+  }
+
+  Widget _imagePlaceholder() {
+    return Container(
+      height: 200,
+      color: Colors.grey.shade200,
+      child: const Center(
+        child: Icon(Icons.broken_image, size: 48, color: Colors.grey),
+      ),
     );
   }
 }

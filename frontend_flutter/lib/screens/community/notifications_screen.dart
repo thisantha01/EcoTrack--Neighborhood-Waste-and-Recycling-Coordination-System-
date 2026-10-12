@@ -103,12 +103,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2E7D32).withAlpha(30),
+                    color: (n.isRequestScheduled ? const Color(0xFF1565C0) : const Color(0xFF2E7D32)).withAlpha(30),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
-                    Icons.check_circle_outline,
-                    color: Color(0xFF2E7D32),
+                  child: Icon(
+                    n.isRequestScheduled ? Icons.local_shipping : Icons.check_circle_outline,
+                    color: n.isRequestScheduled ? const Color(0xFF1565C0) : const Color(0xFF2E7D32),
                     size: 26,
                   ),
                 ),
@@ -171,7 +171,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               _detailRow('Estimated Amount', '${n.quantity} kg'),
             if (n.locationAddress != null && n.locationAddress!.isNotEmpty)
               _detailRow('Pickup Address', n.locationAddress!),
-            _detailRow('Status', 'Accepted & Confirmed', isSuccess: true),
+            if (n.driverName != null && n.driverName!.isNotEmpty)
+              _detailRow('Assigned Driver', n.driverName!),
+            _detailRow(
+              'Status',
+              n.isRequestScheduled ? 'Scheduled with Driver' : 'Accepted & Confirmed',
+              isSuccess: true,
+            ),
             const SizedBox(height: 22),
             Row(
               children: [
@@ -378,18 +384,24 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                     Container(
                                       padding: const EdgeInsets.all(8),
                                       decoration: BoxDecoration(
-                                        color: n.isRequestAccepted
-                                            ? const Color(0xFF2E7D32).withAlpha(25)
-                                            : const Color(0xFF1565C0).withAlpha(25),
+                                        color: n.isRequestScheduled
+                                            ? const Color(0xFF1565C0).withAlpha(25)
+                                            : (n.isRequestAccepted
+                                                ? const Color(0xFF2E7D32).withAlpha(25)
+                                                : const Color(0xFF1565C0).withAlpha(25)),
                                         shape: BoxShape.circle,
                                       ),
                                       child: Icon(
-                                        n.isRequestAccepted
-                                            ? Icons.check_circle
-                                            : Icons.notifications,
-                                        color: n.isRequestAccepted
-                                            ? const Color(0xFF2E7D32)
-                                            : const Color(0xFF1565C0),
+                                        n.isRequestScheduled
+                                            ? Icons.local_shipping
+                                            : (n.isRequestAccepted
+                                                ? Icons.check_circle
+                                                : Icons.notifications),
+                                        color: n.isRequestScheduled
+                                            ? const Color(0xFF1565C0)
+                                            : (n.isRequestAccepted
+                                                ? const Color(0xFF2E7D32)
+                                                : const Color(0xFF1565C0)),
                                         size: 22,
                                       ),
                                     ),

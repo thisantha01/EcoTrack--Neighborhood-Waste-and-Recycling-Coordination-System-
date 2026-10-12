@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -39,7 +40,12 @@ class _RequestCollectionScreenState extends State<RequestCollectionScreen> {
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
-    final picked = await picker.pickImage(source: ImageSource.gallery);
+    final picked = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1024,
+      maxHeight: 1024,
+      imageQuality: 70,
+    );
     if (picked != null) {
       final bytes = await picked.readAsBytes();
       setState(() {
@@ -83,12 +89,18 @@ class _RequestCollectionScreenState extends State<RequestCollectionScreen> {
             '${_preferredTime!.hour.toString().padLeft(2, '0')}:${_preferredTime!.minute.toString().padLeft(2, '0')}';
       }
 
+      String? imageUrl;
+      if (_imageBytes != null) {
+        imageUrl = 'data:image/jpeg;base64,${base64Encode(_imageBytes!)}';
+      }
+
       final wasteTypesList = _selectedWasteTypes.toList();
       await CollectionRequestService.createRequest(
         wasteType: wasteTypesList.first,
         wasteTypes: wasteTypesList,
         estimatedQuantity: quantity,
         description: _descCtrl.text.trim(),
+        imageUrl: imageUrl,
         location: _locationCtrl.text.trim(),
         lat: _pickedLat,
         lng: _pickedLng,
